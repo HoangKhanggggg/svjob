@@ -1,0 +1,175 @@
+/* SVJob - màu chủ đạo xanh lá, nền xám nhạt, bo góc nhỏ (tham khảo bố cục các trang tuyển dụng phổ biến) */
+:root {
+  --sv-primary: #00a659;
+  --sv-primary-dark: #008a4a;
+  --sv-primary-soft: #e8f6ee;
+  --sv-dark: #1f2a37;
+  --sv-bg: #f2f4f5;
+  --sv-text: #212f3f;
+  --sv-muted: #6b7684;
+  --sv-border: #e3e6ea;
+  --sv-orange: #f26b1d;
+  --bs-primary: #00a659;
+  --bs-primary-rgb: 0, 166, 89;
+  --bs-link-color: #00a659;
+  --bs-link-color-rgb: 0, 166, 89;
+  --bs-link-hover-color: #008a4a;
+  --bs-link-hover-color-rgb: 0, 138, 74;
+  --bs-body-font-family: 'Be Vietnam Pro', Arial, sans-serif;
+  --bs-body-font-size: .94rem;
+  --bs-body-color: #212f3f;
+  --bs-border-radius: 6px;
+  --bs-border-radius-lg: 8px;
+  --bs-border-color: #e3e6ea;
+}
+body { background: var(--sv-bg); }
+#root { display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; }
+a { text-decoration: none; }
+h1, h2, h3, h4, h5, h6 { color: var(--sv-text); }
+
+.btn { font-weight: 500; border-radius: 6px; }
+.btn-primary {
+  --bs-btn-bg: var(--sv-primary); --bs-btn-border-color: var(--sv-primary);
+  --bs-btn-hover-bg: var(--sv-primary-dark); --bs-btn-hover-border-color: var(--sv-primary-dark);
+  --bs-btn-active-bg: var(--sv-primary-dark); --bs-btn-active-border-color: var(--sv-primary-dark);
+  --bs-btn-disabled-bg: #7fd1ab; --bs-btn-disabled-border-color: #7fd1ab;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--sv-primary); --bs-btn-border-color: var(--sv-primary);
+  --bs-btn-hover-bg: var(--sv-primary-soft); --bs-btn-hover-color: var(--sv-primary-dark); --bs-btn-hover-border-color: var(--sv-primary);
+  --bs-btn-active-bg: var(--sv-primary-soft); --bs-btn-active-color: var(--sv-primary-dark); --bs-btn-active-border-color: var(--sv-primary);
+}
+.btn-soft { background: var(--sv-primary-soft); color: var(--sv-primary-dark); border: 0; }
+.btn-soft:hover { background: #d3efdf; color: var(--sv-primary-dark); }
+.form-control, .form-select { border-radius: 6px; border-color: #d5d9de; }
+.form-control:focus, .form-select:focus { border-color: var(--sv-primary); box-shadow: 0 0 0 3px rgba(0, 166, 89, .12); }
+.form-check-input:checked { background-color: var(--sv-primary); border-color: var(--sv-primary); }
+.form-label { font-weight: 500; font-size: .9rem; margin-bottom: .35rem; }
+.text-muted { color: var(--sv-muted) !important; }
+.text-primary { color: var(--sv-primary) !important; }
+.pagination { --bs-pagination-active-bg: var(--sv-primary); --bs-pagination-active-border-color: var(--sv-primary); --bs-pagination-color: var(--sv-text); --bs-pagination-hover-color: var(--sv-primary); --bs-pagination-focus-color: var(--sv-primary); }
+.nav-pills { --bs-nav-pills-link-active-bg: var(--sv-primary); --bs-nav-link-color: var(--sv-text); --bs-nav-link-hover-color: var(--sv-primary); }
+
+/* Thanh điều hướng */
+.sv-navbar { background: #fff; border-bottom: 1px solid var(--sv-border); min-height: 64px; }
+.sv-navbar .nav-link { color: var(--sv-text); font-weight: 500; padding: 1.25rem .9rem !important; border-bottom: 2px solid transparent; }
+.sv-navbar .nav-link:hover { color: var(--sv-primary); }
+.sv-navbar .nav-link.active { color: var(--sv-primary); border-bottom-color: var(--sv-primary); }
+.logo { font-weight: 800; font-size: 1.45rem; letter-spacing: -.5px; color: var(--sv-dark); line-height: 1; }
+.logo span { color: var(--sv-primary); }
+.logo small { display: block; font-size: .62rem; font-weight: 500; letter-spacing: .2px; color: var(--sv-muted); margin-top: 3px; }
+.user-menu { display: inline-flex; align-items: center; gap: .5rem; font-size: .9rem; font-weight: 500; }
+.nav-divider { width: 1px; height: 24px; background: var(--sv-border); }
+.employer-link { color: var(--sv-text); font-size: .88rem; font-weight: 500; }
+.employer-link small { display: block; color: var(--sv-muted); font-weight: 400; font-size: .72rem; }
+
+/* Khối tìm kiếm trang chủ */
+.search-band { background: #1b3a2c; color: #fff; padding: 2.2rem 0 1.8rem; }
+.search-band h1 { color: #fff; font-size: 1.6rem; font-weight: 700; margin-bottom: .35rem; }
+.search-band p { color: #b9cdc3; margin-bottom: 1.3rem; }
+.search-box { background: #fff; border-radius: 8px; padding: 6px; }
+.search-box .form-control, .search-box .form-select { border: 0; box-shadow: none; height: 46px; }
+.search-box .cell { display: flex; align-items: center; }
+.search-box .cell + .cell { border-left: 1px solid var(--sv-border); }
+.search-box .cell > i { color: var(--sv-muted); padding-left: .8rem; }
+.search-box .btn { height: 46px; }
+.hot-keys { font-size: .85rem; color: #b9cdc3; margin-top: .9rem; }
+.hot-keys button { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); color: #fff; border-radius: 4px; padding: .15rem .6rem; margin: 0 .25rem .3rem 0; font-size: .82rem; }
+.hot-keys button:hover { background: rgba(255, 255, 255, .16); }
+.quick-stats { border-top: 1px solid rgba(255, 255, 255, .12); margin-top: 1.4rem; padding-top: 1rem; font-size: .88rem; color: #b9cdc3; }
+.quick-stats b { color: #fff; font-size: 1rem; margin-right: .2rem; }
+
+/* Khung chung */
+.sv-card { background: #fff; border: 1px solid var(--sv-border); border-radius: 8px; }
+.sv-card-hover { transition: border-color .12s, box-shadow .12s; }
+.sv-card-hover:hover { border-color: var(--sv-primary); box-shadow: 0 2px 8px rgba(0, 0, 0, .06); }
+.box-title { font-size: 1rem; font-weight: 700; padding: .9rem 1.1rem; border-bottom: 1px solid var(--sv-border); margin: 0; }
+.section-title { font-weight: 700; font-size: 1.2rem; }
+.section-title::before { content: ''; display: inline-block; width: 4px; height: 1.05em; background: var(--sv-primary); margin-right: .55rem; vertical-align: -2px; border-radius: 2px; }
+
+/* Bộ lọc bên trái */
+.filter-group { padding: .9rem 1.1rem; border-bottom: 1px solid var(--sv-border); }
+.filter-group:last-child { border-bottom: 0; }
+.filter-group h6 { font-size: .88rem; font-weight: 600; margin-bottom: .6rem; }
+.filter-item { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: 0; padding: .3rem 0; font-size: .88rem; color: var(--sv-text); text-align: left; }
+.filter-item:hover { color: var(--sv-primary); }
+.filter-item.active { color: var(--sv-primary); font-weight: 600; }
+.filter-item .count { color: var(--sv-muted); font-size: .8rem; font-weight: 400; }
+.filter-item .radio { width: 15px; height: 15px; border: 1.5px solid #b8bec6; border-radius: 50%; margin-right: .5rem; flex-shrink: 0; display: inline-block; vertical-align: -2px; }
+.filter-item.active .radio { border: 4.5px solid var(--sv-primary); }
+
+/* Thẻ việc làm (dạng danh sách) */
+.job-card { padding: 14px 16px; }
+.job-title { font-weight: 600; color: var(--sv-text); font-size: 1rem; line-height: 1.4; }
+.job-card:hover .job-title { color: var(--sv-primary); }
+.job-company { color: var(--sv-muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .1px; }
+.job-salary { color: var(--sv-primary); font-weight: 600; white-space: nowrap; font-size: .95rem; }
+.logo-box { border: 1px solid var(--sv-border); border-radius: 6px; background: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; letter-spacing: -.5px; }
+.avatar { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; flex-shrink: 0; }
+.tag { display: inline-block; background: #f1f3f5; color: #3d4752; border-radius: 4px; padding: 2px 8px; font-size: .8rem; }
+.tag-new { background: #fff1e8; color: var(--sv-orange); font-weight: 600; font-size: .7rem; padding: 1px 6px; border-radius: 3px; vertical-align: 2px; }
+.tag-urgent { color: #d93025; font-size: .8rem; }
+.job-foot { border-top: 1px dashed var(--sv-border); margin-top: 10px; padding-top: 8px; font-size: .8rem; color: var(--sv-muted); }
+.badge { font-weight: 500; padding: .38em .65em; border-radius: 4px; }
+h3 .badge, h4 .badge, h5 .badge, h6 .badge { font-size: .72rem; vertical-align: middle; }
+
+/* Ô thống kê */
+.stat-card { padding: .9rem 1.1rem; }
+.stat-card .label { color: var(--sv-muted); font-size: .82rem; display: flex; justify-content: space-between; }
+.stat-card b { font-size: 1.5rem; display: block; line-height: 1.3; margin-top: .15rem; }
+.cat-icon { width: 36px; height: 36px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; background: #f1f3f5; color: #4d5864; }
+
+/* Bảng */
+.sv-table { margin: 0; font-size: .9rem; }
+.sv-table thead th { background: #f7f8f9; color: var(--sv-muted); font-weight: 600; font-size: .82rem; border-bottom: 1px solid var(--sv-border); padding: .7rem 1rem; white-space: nowrap; }
+.sv-table td { padding: .75rem 1rem; border-color: #eef0f2; }
+
+/* Đăng nhập / đăng ký */
+.auth-wrap { max-width: 1000px; margin: .5rem auto; background: #fff; border: 1px solid var(--sv-border); border-radius: 8px; overflow: hidden; }
+.auth-form { padding: 2.2rem 2.5rem; }
+.auth-side { background: var(--sv-primary-soft); padding: 2.2rem; border-left: 1px solid var(--sv-border); }
+.auth-side h5 { font-weight: 700; }
+.auth-side li { display: flex; gap: .6rem; margin-bottom: .9rem; font-size: .9rem; }
+.auth-side li i { color: var(--sv-primary); font-size: 1.1rem; }
+.auth-side .quote { background: #fff; border-radius: 6px; padding: 1rem; font-size: .87rem; border: 1px solid #d6eadf; }
+.role-option { border: 1px solid #d5d9de; border-radius: 6px; padding: .75rem .9rem; background: #fff; width: 100%; text-align: left; display: flex; gap: .7rem; align-items: center; }
+.role-option.active { border-color: var(--sv-primary); background: var(--sv-primary-soft); }
+.role-option i { font-size: 1.4rem; color: var(--sv-muted); }
+.role-option.active i { color: var(--sv-primary); }
+
+/* Chi tiết tin */
+.detail-head { padding: 1.3rem 1.4rem; border-bottom: 1px solid var(--sv-border); }
+.detail-head h3 { font-size: 1.35rem; }
+.key-info { display: flex; gap: .7rem; align-items: center; }
+.key-info .ic { width: 40px; height: 40px; border-radius: 50%; background: var(--sv-primary-soft); color: var(--sv-primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.key-info small { color: var(--sv-muted); display: block; font-size: .8rem; }
+.key-info span { font-weight: 600; font-size: .9rem; }
+.content-h { font-size: 1.05rem; font-weight: 700; margin: 1.2rem 0 .6rem; }
+.info-list { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
+.info-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid #f0f2f4; }
+.info-list li:last-child { border-bottom: 0; }
+.info-list li span:first-child { color: var(--sv-muted); }
+.sticky-side { position: sticky; top: 80px; }
+.cover { height: 120px; background: #1b3a2c; }
+.breadcrumb { --bs-breadcrumb-font-size: .85rem; --bs-breadcrumb-divider-color: var(--sv-muted); }
+.breadcrumb a { color: var(--sv-muted); }
+
+/* Thông báo */
+.noti-menu { width: 360px; max-height: 440px; overflow-y: auto; border: 1px solid var(--sv-border); box-shadow: 0 6px 20px rgba(0, 0, 0, .1); border-radius: 8px; }
+.noti-unread { background: #f3faf6; }
+.noti-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sv-primary); flex-shrink: 0; margin-top: .45rem; }
+.star { color: #f5a623; }
+.pre-line { white-space: pre-line; }
+.cursor-pointer { cursor: pointer; }
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--sv-muted); }
+.empty-state i { font-size: 2.4rem; color: #c3c9cf; }
+
+/* Chân trang */
+.sv-footer { background: #fff; border-top: 1px solid var(--sv-border); color: var(--sv-muted); padding: 2.2rem 0 1.2rem; margin-top: 2.5rem; font-size: .88rem; }
+.sv-footer h6 { font-weight: 700; font-size: .92rem; margin-bottom: .8rem; }
+.sv-footer a { color: var(--sv-muted); display: block; margin-bottom: .4rem; }
+.sv-footer a:hover { color: var(--sv-primary); }
+.sv-footer .bottom { border-top: 1px solid var(--sv-border); margin-top: 1.5rem; padding-top: 1rem; font-size: .8rem; }
+
+.btn-success { --bs-btn-bg: #00843f; --bs-btn-border-color: #00843f; --bs-btn-hover-bg: #006e34; --bs-btn-hover-border-color: #006e34; --bs-btn-active-bg: #006e34; }
