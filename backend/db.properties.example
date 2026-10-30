@@ -1,0 +1,5 @@
+# Chép file này thành db.properties (cùng thư mục backend) rồi sửa mật khẩu cho đúng MySQL trên máy bạn.
+# Chỉ cần sửa dòng DB_PASSWORD, các dòng khác giữ nguyên nếu MySQL cài mặc định.
+DB_USERNAME=root
+DB_PASSWORD=mat_khau_mysql_cua_ban
+# DB_URL=jdbc:mysql://localhost:3306/svjob?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Ho_Chi_Minh
