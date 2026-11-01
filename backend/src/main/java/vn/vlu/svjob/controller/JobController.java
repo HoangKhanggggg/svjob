@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import vn.vlu.svjob.dto.CommonDtos.CategoryResponse;
+import vn.vlu.svjob.dto.CommonDtos.PageResponse;
 import vn.vlu.svjob.dto.JobDtos.JobDetail;
 import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
@@ -30,6 +31,17 @@ public class JobController {
     @GetMapping("/categories")
     public List<CategoryResponse> categories() {
         return categoryService.activeCategories();
+    }
+
+    @GetMapping("/jobs")
+    public PageResponse<JobSummary> search(@RequestParam(required = false) String keyword,
+                                           @RequestParam(required = false) Integer categoryId,
+                                           @RequestParam(required = false) String location,
+                                           @RequestParam(required = false) Integer minSalary,
+                                           @RequestParam(required = false) Integer maxSalary,
+                                           @RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "10") int size) {
+        return jobService.search(keyword, categoryId, location, minSalary, maxSalary, page, size);
     }
 
     @GetMapping("/jobs/{id}")
