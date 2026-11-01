@@ -489,6 +489,46 @@
               }
             }
           ]
+        },
+        {
+          "name": "TC-05 SV gọi API đăng tin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenSV}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nhân viên phục vụ (Postman)\",\n  \"categoryId\": 1,\n  \"description\": \"Order, bưng nước\",\n  \"salaryMin\": 25000,\n  \"salaryMax\": 30000,\n  \"salaryUnit\": \"HOUR\",\n  \"location\": \"Gò Vấp\",\n  \"workTime\": \"Ca tối 18h-22h\",\n  \"quantity\": 1,\n  \"deadline\": \"2026-12-30\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -644,6 +684,577 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Tin tuyển dụng (FR-06 → 11)",
+      "item": [
+        {
+          "name": "Danh mục ngành nghề",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-09 Đăng tin hợp lệ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nhân viên phục vụ (Postman)\",\n  \"categoryId\": 1,\n  \"description\": \"Order, bưng nước\",\n  \"salaryMin\": 25000,\n  \"salaryMax\": 30000,\n  \"salaryUnit\": \"HOUR\",\n  \"location\": \"Gò Vấp\",\n  \"workTime\": \"Ca tối 18h-22h\",\n  \"quantity\": 1,\n  \"deadline\": \"2026-12-30\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('jobId', pm.response.json().id);",
+                  "pm.test('Trạng thái OPEN', () => pm.expect(pm.response.json().status).to.eql('OPEN'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-10 Đăng tin thiếu tiêu đề",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"categoryId\": 1,\n  \"description\": \"Order, bưng nước\",\n  \"salaryMin\": 25000,\n  \"salaryMax\": 30000,\n  \"salaryUnit\": \"HOUR\",\n  \"location\": \"Gò Vấp\",\n  \"workTime\": \"Ca tối 18h-22h\",\n  \"quantity\": 1,\n  \"deadline\": \"2026-12-30\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lỗi ở trường title', () => pm.expect(pm.response.json().errors).to.have.property('title'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-14 Danh sách tin (chỉ Đang tuyển)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Chỉ có tin OPEN', () => pm.response.json().items.forEach(i => pm.expect(i.status).to.eql('OPEN')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-15 Lọc kết hợp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs?location=Gò Vấp&categoryId=3&minSalary=100000&maxSalary=200000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "location",
+                  "value": "Gò Vấp"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "3"
+                },
+                {
+                  "key": "minSalary",
+                  "value": "100000"
+                },
+                {
+                  "key": "maxSalary",
+                  "value": "200000"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Chi tiết tin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{jobId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tin của tôi (NTD)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employers/me/jobs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employers",
+                "me",
+                "jobs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Ứng tuyển (FR-12 → 15)",
+      "item": [
+        {
+          "name": "TC-16 SV ứng tuyển",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenSV}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{jobId}}",
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "coverLetter",
+                  "value": "Em rảnh buổi tối",
+                  "type": "text"
+                },
+                {
+                  "key": "cv",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('appId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-17 Ứng tuyển lần 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenSV}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{jobId}}",
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "coverLetter",
+                  "value": "Lần 2",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo đúng', () => pm.expect(pm.response.json().message).to.include(\"Bạn đã ứng tuyển công việc này\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-18 Ứng tuyển tin đã đóng",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenSV}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/5/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "5",
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "coverLetter",
+                  "value": "x",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo đúng', () => pm.expect(pm.response.json().message).to.include(\"Tin đã ngừng nhận hồ sơ\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-14 Danh sách ứng viên của tin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{jobId}}",
+                "applications"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-20 NTD duyệt đơn",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/{{appId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications",
+                "{{appId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Có processedAt', () => pm.expect(pm.response.json().processedAt).to.not.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SV2 ứng tuyển (để test TC-21)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenSV2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "jobs",
+                "{{jobId}}",
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "coverLetter",
+                  "value": "Em cũng muốn ứng tuyển",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('appId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-21 Duyệt vượt số lượng",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenNTD}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/{{appId2}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications",
+                "{{appId2}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mã 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Thông báo đúng', () => pm.expect(pm.response.json().message).to.include(\"Tin đã nhận đủ số lượng\"));"
                 ]
               }
             }
