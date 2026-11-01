@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import HomePage from './pages/HomePage';
+import JobDetailPage from './pages/JobDetailPage';
 import StudentProfilePage from './pages/student/StudentProfilePage';
 import EmployerProfilePage from './pages/employer/EmployerProfilePage';
 
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/jobs/:id" element={<JobDetailPage />} />
 
           <Route path="/student/profile" element={guard(STUDENT, <StudentProfilePage />)} />
 
