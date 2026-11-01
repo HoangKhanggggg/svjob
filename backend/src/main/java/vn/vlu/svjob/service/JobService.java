@@ -1,7 +1,11 @@
 package vn.vlu.svjob.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.vlu.svjob.dto.CommonDtos.PageResponse;
 import vn.vlu.svjob.dto.JobDtos.JobDetail;
 import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
@@ -11,12 +15,13 @@ import vn.vlu.svjob.entity.Role;
 import vn.vlu.svjob.entity.User;
 import vn.vlu.svjob.exception.ApiException;
 import vn.vlu.svjob.repository.JobPostRepository;
+import vn.vlu.svjob.repository.JobSpecs;
 import vn.vlu.svjob.repository.UserRepository;
 import vn.vlu.svjob.security.UserPrincipal;
 
 import java.util.List;
 
-/** Tin tuyển dụng: đăng tin, xem chi tiết, tin của tôi (FR-06, FR-11). */
+/** Tin tuyển dụng: đăng tin, xem chi tiết, tin của tôi, tìm kiếm (FR-06, FR-09 → FR-11). */
 @Service
 public class JobService {
 
@@ -33,7 +38,18 @@ public class JobService {
         this.profileService = profileService;
     }
 
-    // ---------- Xem (công khai) ----------
+    // ---------- Xem / tìm kiếm (công khai) ----------
+
+    /** FR-09, FR-10: chỉ tin Đang tuyển, mới nhất lên đầu, tối đa 20 tin/trang. */
+    @Transactional(readOnly = true)
+    public PageResponse<JobSummary> search(String keyword, Integer categoryId, String location,
+                                           Integer minSalary, Integer maxSalary, int page, int size) {
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 20),
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<JobPost> result = jobPostRepository.findAll(
+                JobSpecs.filter(JobStatus.OPEN, keyword, categoryId, location, minSalary, maxSalary), pageable);
+        return PageResponse.of(result.map(j -> JobSummary.from(j, profileService.companyName(j.getEmployer().getId()), 0, 0)));
+    }
 
     /** FR-11. Tin bị Admin ẩn thì chỉ chủ tin và Admin còn xem được. */
     @Transactional(readOnly = true)
