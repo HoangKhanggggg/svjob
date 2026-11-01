@@ -8,6 +8,9 @@ import HomePage from './pages/HomePage';
 import JobDetailPage from './pages/JobDetailPage';
 import StudentProfilePage from './pages/student/StudentProfilePage';
 import EmployerProfilePage from './pages/employer/EmployerProfilePage';
+import MyJobsPage from './pages/employer/MyJobsPage';
+import JobFormPage from './pages/employer/JobFormPage';
+import ApplicantsPage from './pages/employer/ApplicantsPage';
 
 const STUDENT = ['STUDENT'];
 const EMPLOYER = ['EMPLOYER'];
@@ -30,6 +33,10 @@ export default function App() {
           <Route path="/student/profile" element={guard(STUDENT, <StudentProfilePage />)} />
 
           <Route path="/employer/profile" element={guard(EMPLOYER, <EmployerProfilePage />)} />
+          <Route path="/employer/jobs" element={guard(EMPLOYER, <MyJobsPage />)} />
+          <Route path="/employer/jobs/new" element={guard(EMPLOYER, <JobFormPage />)} />
+          <Route path="/employer/jobs/:id/edit" element={guard(EMPLOYER, <JobFormPage />)} />
+          <Route path="/employer/jobs/:id/applicants" element={guard(EMPLOYER, <ApplicantsPage />)} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
