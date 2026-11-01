@@ -9,11 +9,13 @@ import vn.vlu.svjob.dto.CommonDtos.PageResponse;
 import vn.vlu.svjob.dto.JobDtos.JobDetail;
 import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
+import vn.vlu.svjob.entity.ApplicationStatus;
 import vn.vlu.svjob.entity.JobPost;
 import vn.vlu.svjob.entity.JobStatus;
 import vn.vlu.svjob.entity.Role;
 import vn.vlu.svjob.entity.User;
 import vn.vlu.svjob.exception.ApiException;
+import vn.vlu.svjob.repository.ApplicationRepository;
 import vn.vlu.svjob.repository.JobPostRepository;
 import vn.vlu.svjob.repository.JobSpecs;
 import vn.vlu.svjob.repository.UserRepository;
@@ -26,13 +28,15 @@ import java.util.List;
 public class JobService {
 
     private final JobPostRepository jobPostRepository;
+    private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final CategoryService categoryService;
     private final ProfileService profileService;
 
-    public JobService(JobPostRepository jobPostRepository, UserRepository userRepository,
-                      CategoryService categoryService, ProfileService profileService) {
+    public JobService(JobPostRepository jobPostRepository, ApplicationRepository applicationRepository,
+                      UserRepository userRepository, CategoryService categoryService, ProfileService profileService) {
         this.jobPostRepository = jobPostRepository;
+        this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.categoryService = categoryService;
         this.profileService = profileService;
@@ -61,8 +65,8 @@ public class JobService {
                 throw ApiException.notFound("Tin tuyển dụng không tồn tại hoặc đã bị ẩn");
             }
         }
-        // Số người đã nhận sẽ tính khi có chức năng ứng tuyển (T7.4)
-        return JobDetail.from(job, 0, profileService.toEmployerResponse(job.getEmployer()));
+        long accepted = applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED);
+        return JobDetail.from(job, accepted, profileService.toEmployerResponse(job.getEmployer()));
     }
 
     // ---------- Nhà tuyển dụng ----------
@@ -83,7 +87,9 @@ public class JobService {
     public List<JobSummary> myJobs(Long employerId) {
         String company = profileService.companyName(employerId);
         return jobPostRepository.findByEmployerIdOrderByCreatedAtDesc(employerId).stream()
-                .map(j -> JobSummary.from(j, company, 0, 0))
+                .map(j -> JobSummary.from(j, company,
+                        applicationRepository.countByJobIdAndStatus(j.getId(), ApplicationStatus.PENDING),
+                        applicationRepository.countByJobIdAndStatus(j.getId(), ApplicationStatus.ACCEPTED)))
                 .toList();
     }
 
