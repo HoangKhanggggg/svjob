@@ -34,17 +34,19 @@ public class ApplicationService {
     private final JobService jobService;
     private final ProfileService profileService;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public ApplicationService(ApplicationRepository applicationRepository,
                               StudentProfileRepository studentProfileRepository, UserRepository userRepository,
                               JobService jobService, ProfileService profileService,
-                              FileStorageService fileStorageService) {
+                              FileStorageService fileStorageService, NotificationService notificationService) {
         this.applicationRepository = applicationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
         this.jobService = jobService;
         this.profileService = profileService;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -83,6 +85,8 @@ public class ApplicationService {
         a.setStatus(ApplicationStatus.PENDING);
         applicationRepository.save(a);
 
+        notificationService.notify(job.getEmployer(), student.getFullName() + " vừa ứng tuyển tin “"
+                + job.getTitle() + "”", "/employer/jobs/" + job.getId() + "/applicants");
         return toResult(a);
     }
 
@@ -120,6 +124,10 @@ public class ApplicationService {
         }
         a.setStatus(decision);
         a.setProcessedAt(LocalDateTime.now());
+        String msg = decision == ApplicationStatus.ACCEPTED
+                ? "Chúc mừng! Đơn ứng tuyển “" + job.getTitle() + "” của bạn đã được nhận"
+                : "Đơn ứng tuyển “" + job.getTitle() + "” của bạn chưa phù hợp lần này";
+        notificationService.notify(a.getStudent(), msg, "/student/applications");
         return toResult(a);
     }
 
