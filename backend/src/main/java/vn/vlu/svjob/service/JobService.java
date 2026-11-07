@@ -23,7 +23,7 @@ import vn.vlu.svjob.security.UserPrincipal;
 
 import java.util.List;
 
-/** Tin tuyển dụng: đăng tin, xem chi tiết, tin của tôi, tìm kiếm (FR-06, FR-09 → FR-11). */
+/** Tin tuyển dụng: đăng, sửa, xóa, tìm kiếm (FR-06 → FR-11). */
 @Service
 public class JobService {
 
@@ -81,6 +81,33 @@ public class JobService {
         job.setStatus(JobStatus.OPEN);
         jobPostRepository.save(job);
         return JobDetail.from(job, 0, profileService.toEmployerResponse(userRepository.findById(employerId).orElseThrow()));
+    }
+
+    /** FR-07: chỉ chủ tin được sửa; không sửa tin đã hoàn thành / đã đóng / bị ẩn. */
+    @Transactional
+    public JobDetail update(Long employerId, Long jobId, JobRequest req) {
+        JobPost job = findOwned(jobId, employerId);
+        if (job.getStatus() != JobStatus.OPEN && job.getStatus() != JobStatus.FILLED) {
+            throw ApiException.conflict("Không thể sửa tin ở trạng thái hiện tại");
+        }
+        validateSalary(req);
+        long accepted = applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED);
+        if (req.quantity() < accepted) {
+            throw ApiException.conflict("Số lượng cần tuyển không được nhỏ hơn số người đã nhận (" + accepted + ")");
+        }
+        apply(job, req);
+        return JobDetail.from(job, accepted, profileService.toEmployerResponse(job.getEmployer()));
+    }
+
+    /** FR-07, BR-04: không xóa được tin đã có người được nhận (chỉ được đóng). */
+    @Transactional
+    public void delete(Long employerId, Long jobId) {
+        JobPost job = findOwned(jobId, employerId);
+        if (applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED) > 0) {
+            throw ApiException.conflict("Tin đã có ứng viên được nhận, bạn chỉ có thể đóng tin");
+        }
+        applicationRepository.deleteAll(applicationRepository.findByJobIdOrderByAppliedAtDesc(jobId));
+        jobPostRepository.delete(job);
     }
 
     @Transactional(readOnly = true)
