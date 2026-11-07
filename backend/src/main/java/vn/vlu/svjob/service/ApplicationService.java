@@ -15,6 +15,7 @@ import vn.vlu.svjob.entity.StudentProfile;
 import vn.vlu.svjob.entity.User;
 import vn.vlu.svjob.exception.ApiException;
 import vn.vlu.svjob.repository.ApplicationRepository;
+import vn.vlu.svjob.repository.ReviewRepository;
 import vn.vlu.svjob.repository.StudentProfileRepository;
 import vn.vlu.svjob.repository.UserRepository;
 import vn.vlu.svjob.security.UserPrincipal;
@@ -32,6 +33,7 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final JobService jobService;
     private final ProfileService profileService;
     private final FileStorageService fileStorageService;
@@ -39,11 +41,12 @@ public class ApplicationService {
 
     public ApplicationService(ApplicationRepository applicationRepository,
                               StudentProfileRepository studentProfileRepository, UserRepository userRepository,
-                              JobService jobService, ProfileService profileService,
+                              ReviewRepository reviewRepository, JobService jobService, ProfileService profileService,
                               FileStorageService fileStorageService, NotificationService notificationService) {
         this.applicationRepository = applicationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
+        this.reviewRepository = reviewRepository;
         this.jobService = jobService;
         this.profileService = profileService;
         this.fileStorageService = fileStorageService;
@@ -98,7 +101,7 @@ public class ApplicationService {
             JobPost j = a.getJob();
             Long employerId = j.getEmployer().getId();
             boolean canReview = a.getStatus() == ApplicationStatus.ACCEPTED && j.getStatus() == JobStatus.COMPLETED;
-            boolean reviewed = false;   // có bảng reviews ở PR feature/review
+            boolean reviewed = canReview && reviewRepository.existsByJobIdAndReviewerIdAndRevieweeId(j.getId(), studentId, employerId);
             return new MyApplication(a.getId(), j.getId(), j.getTitle(), profileService.companyName(employerId),
                     employerId, j.getStatus(), a.getStatus(), a.getAppliedAt(), a.getProcessedAt(),
                     a.getCvUrl() != null, canReview, reviewed);
@@ -123,14 +126,15 @@ public class ApplicationService {
     /** FR-14: NTD chỉ xem ứng viên của tin mình. */
     @Transactional(readOnly = true)
     public List<Applicant> applicants(Long employerId, Long jobId) {
-        jobService.findOwned(jobId, employerId);
+        JobPost job = jobService.findOwned(jobId, employerId);
         return applicationRepository.findByJobIdOrderByAppliedAtDesc(jobId).stream().map(a -> {
             User s = a.getStudent();
             StudentProfile p = studentProfileRepository.findByUserId(s.getId()).orElse(new StudentProfile(s));
+            boolean reviewed = reviewRepository.existsByJobIdAndReviewerIdAndRevieweeId(job.getId(), employerId, s.getId());
             return new Applicant(a.getId(), s.getId(), s.getFullName(), s.getEmail(), s.getPhone(), p.getSchool(),
                     p.getMajor(), p.getYearOfStudy(), p.getSkills(), p.getBio(), a.getCoverLetter(),
                     a.getCvUrl() != null, a.getStatus(), a.getAppliedAt(), a.getProcessedAt(),
-                    null, false);
+                    reviewRepository.averageRating(s.getId()), reviewed);
         }).toList();
     }
 

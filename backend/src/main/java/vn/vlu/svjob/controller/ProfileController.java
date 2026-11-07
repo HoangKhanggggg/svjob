@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.vlu.svjob.dto.ProfileDtos.EmployerProfileRequest;
 import vn.vlu.svjob.dto.ProfileDtos.EmployerProfileResponse;
+import vn.vlu.svjob.dto.ProfileDtos.EmployerPublicResponse;
 import vn.vlu.svjob.dto.ProfileDtos.StudentProfileRequest;
 import vn.vlu.svjob.dto.ProfileDtos.StudentProfileResponse;
 import vn.vlu.svjob.security.UserPrincipal;
 import vn.vlu.svjob.service.ProfileService;
 
-/** Hồ sơ SV (FR-04), hồ sơ NTD (FR-05). */
+/** Hồ sơ SV (FR-04), hồ sơ NTD (FR-05), trang công khai NTD. */
 @RestController
 @RequestMapping("/api")
 public class ProfileController {
@@ -55,5 +56,10 @@ public class ProfileController {
     public EmployerProfileResponse updateEmployer(@AuthenticationPrincipal UserPrincipal me,
                                                   @Valid @RequestBody EmployerProfileRequest req) {
         return profileService.updateEmployer(me.id(), req);
+    }
+
+    @GetMapping("/employers/{id}")
+    public EmployerPublicResponse publicEmployer(@PathVariable Long id) {
+        return profileService.publicEmployer(id);
     }
 }
