@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import vn.vlu.svjob.dto.ApplicationDtos.Applicant;
 import vn.vlu.svjob.dto.ApplicationDtos.ApplicationResult;
 import vn.vlu.svjob.dto.ApplicationDtos.DecisionRequest;
+import vn.vlu.svjob.dto.ApplicationDtos.MyApplication;
 import vn.vlu.svjob.security.UserPrincipal;
 import vn.vlu.svjob.service.ApplicationService;
 
@@ -34,6 +35,16 @@ public class ApplicationController {
                                    @RequestParam(value = "coverLetter", required = false) String coverLetter,
                                    @RequestParam(value = "useProfileCv", defaultValue = "false") boolean useProfileCv) {
         return applicationService.apply(me.id(), jobId, cv, coverLetter, useProfileCv);
+    }
+
+    @GetMapping("/students/me/applications")
+    public List<MyApplication> myApplications(@AuthenticationPrincipal UserPrincipal me) {
+        return applicationService.myApplications(me.id());
+    }
+
+    @PatchMapping("/applications/{id}/withdraw")
+    public ApplicationResult withdraw(@AuthenticationPrincipal UserPrincipal me, @PathVariable Long id) {
+        return applicationService.withdraw(me.id(), id);
     }
 
     @GetMapping("/jobs/{jobId}/applications")
