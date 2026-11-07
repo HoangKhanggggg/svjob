@@ -2,6 +2,7 @@ package vn.vlu.svjob.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.vlu.svjob.dto.CommonDtos.CategoryRequest;
 import vn.vlu.svjob.dto.CommonDtos.CategoryResponse;
 import vn.vlu.svjob.entity.JobCategory;
 import vn.vlu.svjob.exception.ApiException;
@@ -21,6 +22,40 @@ public class CategoryService {
 
     public List<CategoryResponse> activeCategories() {
         return categoryRepository.findByActiveTrueOrderByNameAsc().stream().map(CategoryService::toResponse).toList();
+    }
+
+    public List<CategoryResponse> allCategories() {
+        return categoryRepository.findAllByOrderByNameAsc().stream().map(CategoryService::toResponse).toList();
+    }
+
+    @Transactional
+    public CategoryResponse create(CategoryRequest req) {
+        if (categoryRepository.existsByNameIgnoreCase(req.name().trim())) {
+            throw ApiException.conflict("Ngành nghề đã tồn tại");
+        }
+        JobCategory c = new JobCategory();
+        c.setName(req.name().trim());
+        c.setDescription(req.description());
+        return toResponse(categoryRepository.save(c));
+    }
+
+    @Transactional
+    public CategoryResponse update(Integer id, CategoryRequest req) {
+        JobCategory c = find(id);
+        if (!c.getName().equalsIgnoreCase(req.name().trim()) && categoryRepository.existsByNameIgnoreCase(req.name().trim())) {
+            throw ApiException.conflict("Ngành nghề đã tồn tại");
+        }
+        c.setName(req.name().trim());
+        c.setDescription(req.description());
+        if (req.active() != null) {
+            c.setActive(req.active());
+        }
+        return toResponse(c);
+    }
+
+    @Transactional
+    public void hide(Integer id) {
+        find(id).setActive(false);
     }
 
     JobCategory findActive(Integer id) {

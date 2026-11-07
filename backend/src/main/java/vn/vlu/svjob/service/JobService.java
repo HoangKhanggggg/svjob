@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Tin tuyển dụng: đăng, sửa, đóng, xóa, tìm kiếm, trạng thái công việc (FR-06 → FR-11, FR-16). */
+/** Tin tuyển dụng: đăng, sửa, đóng, xóa, tìm kiếm, trạng thái công việc, kiểm duyệt (FR-06 → FR-11, FR-16, FR-08). */
 @Service
 public class JobService {
 
@@ -157,6 +157,42 @@ public class JobService {
                         applicationRepository.countByJobIdAndStatus(j.getId(), ApplicationStatus.PENDING),
                         applicationRepository.countByJobIdAndStatus(j.getId(), ApplicationStatus.ACCEPTED)))
                 .toList();
+    }
+
+    // ---------- Admin (FR-08) ----------
+
+    @Transactional(readOnly = true)
+    public PageResponse<JobSummary> adminList(String keyword, JobStatus status, int page) {
+        var pageable = PageRequest.of(Math.max(page, 0), 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return PageResponse.of(jobPostRepository.findAll(JobSpecs.filter(status, keyword, null, null, null, null), pageable)
+                .map(j -> JobSummary.from(j, profileService.companyName(j.getEmployer().getId()), 0, 0)));
+    }
+
+    /** Ẩn tin kèm lý do / bỏ ẩn. Bỏ ẩn thì trả về Đã nhận người nếu đã có người được nhận, ngược lại Đang tuyển. */
+    @Transactional
+    public JobSummary hide(Long jobId, boolean hidden, String reason) {
+        JobPost job = find(jobId);
+        if (hidden) {
+            if (reason == null || reason.isBlank()) {
+                throw ApiException.badRequest("Vui lòng nhập lý do ẩn tin");
+            }
+            if (job.getStatus() == JobStatus.HIDDEN) {
+                throw ApiException.conflict("Tin đã bị ẩn trước đó");
+            }
+            job.setStatus(JobStatus.HIDDEN);
+            job.setHiddenReason(reason.trim());
+            notificationService.notify(job.getEmployer(), "Tin “" + job.getTitle() + "” đã bị ẩn. Lý do: "
+                    + reason.trim(), "/employer/jobs");
+        } else {
+            if (job.getStatus() != JobStatus.HIDDEN) {
+                throw ApiException.conflict("Tin đang không bị ẩn");
+            }
+            boolean hasAccepted = applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED) > 0;
+            job.setStatus(hasAccepted ? JobStatus.FILLED : JobStatus.OPEN);
+            job.setHiddenReason(null);
+            notificationService.notify(job.getEmployer(), "Tin “" + job.getTitle() + "” đã được hiển thị lại", "/employer/jobs");
+        }
+        return JobSummary.from(job, profileService.companyName(job.getEmployer().getId()), 0, 0);
     }
 
     // ---------- Hàm dùng chung ----------
