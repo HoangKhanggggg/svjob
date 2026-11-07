@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import vn.vlu.svjob.dto.ApplicationDtos.Applicant;
 import vn.vlu.svjob.dto.ApplicationDtos.ApplicationResult;
+import vn.vlu.svjob.dto.ApplicationDtos.MyApplication;
 import vn.vlu.svjob.entity.Application;
 import vn.vlu.svjob.entity.ApplicationStatus;
 import vn.vlu.svjob.entity.JobPost;
@@ -24,7 +25,7 @@ import java.util.List;
 
 import static vn.vlu.svjob.service.AuthService.blankToNull;
 
-/** Ứng tuyển, xem ứng viên, duyệt / từ chối (FR-12, FR-14, FR-15). */
+/** Ứng tuyển, đơn của tôi, rút đơn, xem ứng viên, duyệt / từ chối (FR-12 → FR-15). */
 @Service
 public class ApplicationService {
 
@@ -87,6 +88,35 @@ public class ApplicationService {
 
         notificationService.notify(job.getEmployer(), student.getFullName() + " vừa ứng tuyển tin “"
                 + job.getTitle() + "”", "/employer/jobs/" + job.getId() + "/applicants");
+        return toResult(a);
+    }
+
+    /** FR-13: đơn của tôi kèm trạng thái, và có được đánh giá NTD hay chưa (FR-18). */
+    @Transactional(readOnly = true)
+    public List<MyApplication> myApplications(Long studentId) {
+        return applicationRepository.findByStudentIdOrderByAppliedAtDesc(studentId).stream().map(a -> {
+            JobPost j = a.getJob();
+            Long employerId = j.getEmployer().getId();
+            boolean canReview = a.getStatus() == ApplicationStatus.ACCEPTED && j.getStatus() == JobStatus.COMPLETED;
+            boolean reviewed = false;   // có bảng reviews ở PR feature/review
+            return new MyApplication(a.getId(), j.getId(), j.getTitle(), profileService.companyName(employerId),
+                    employerId, j.getStatus(), a.getStatus(), a.getAppliedAt(), a.getProcessedAt(),
+                    a.getCvUrl() != null, canReview, reviewed);
+        }).toList();
+    }
+
+    /** FR-13, BR-07: chỉ rút được đơn còn Chờ duyệt. */
+    @Transactional
+    public ApplicationResult withdraw(Long studentId, Long applicationId) {
+        Application a = find(applicationId);
+        if (!a.getStudent().getId().equals(studentId)) {
+            throw ApiException.forbidden("Bạn không có quyền với đơn này");
+        }
+        if (a.getStatus() != ApplicationStatus.PENDING) {
+            throw ApiException.conflict("Chỉ rút được đơn đang chờ duyệt");
+        }
+        a.setStatus(ApplicationStatus.WITHDRAWN);
+        a.setProcessedAt(LocalDateTime.now());
         return toResult(a);
     }
 

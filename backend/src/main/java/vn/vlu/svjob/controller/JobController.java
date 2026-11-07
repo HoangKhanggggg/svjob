@@ -55,6 +55,18 @@ public class JobController {
         return jobService.create(me.id(), req);
     }
 
+    @PutMapping("/jobs/{id}")
+    public JobDetail update(@AuthenticationPrincipal UserPrincipal me, @PathVariable Long id,
+                            @Valid @RequestBody JobRequest req) {
+        return jobService.update(me.id(), id, req);
+    }
+
+    @DeleteMapping("/jobs/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@AuthenticationPrincipal UserPrincipal me, @PathVariable Long id) {
+        jobService.delete(me.id(), id);
+    }
+
     @GetMapping("/employers/me/jobs")
     public List<JobSummary> myJobs(@AuthenticationPrincipal UserPrincipal me) {
         return jobService.myJobs(me.id());
