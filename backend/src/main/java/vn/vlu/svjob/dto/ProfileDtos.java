@@ -9,6 +9,8 @@ import vn.vlu.svjob.entity.EmployerProfile;
 import vn.vlu.svjob.entity.StudentProfile;
 import vn.vlu.svjob.entity.User;
 
+import java.util.List;
+
 /** Hồ sơ sinh viên (FR-04) và nhà tuyển dụng (FR-05). */
 public final class ProfileDtos {
 
@@ -49,5 +51,9 @@ public final class ProfileDtos {
             return new EmployerProfileResponse(u.getId(), u.getEmail(), u.getFullName(), p.getCompanyName(),
                     p.getAddress(), p.getDescription(), p.getContactPhone(), avg, count);
         }
+    }
+
+    /** Trang công khai của NTD: hồ sơ + điểm đánh giá (FR-19) + các tin đang tuyển. */
+    public record EmployerPublicResponse(EmployerProfileResponse profile, List<JobDtos.JobSummary> openJobs) {
     }
 }

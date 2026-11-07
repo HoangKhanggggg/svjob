@@ -4,35 +4,47 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import vn.vlu.svjob.dto.JobDtos.JobSummary;
 import vn.vlu.svjob.dto.ProfileDtos.EmployerProfileRequest;
 import vn.vlu.svjob.dto.ProfileDtos.EmployerProfileResponse;
+import vn.vlu.svjob.dto.ProfileDtos.EmployerPublicResponse;
 import vn.vlu.svjob.dto.ProfileDtos.StudentProfileRequest;
 import vn.vlu.svjob.dto.ProfileDtos.StudentProfileResponse;
 import vn.vlu.svjob.entity.EmployerProfile;
+import vn.vlu.svjob.entity.JobStatus;
 import vn.vlu.svjob.entity.Role;
 import vn.vlu.svjob.entity.StudentProfile;
 import vn.vlu.svjob.entity.User;
 import vn.vlu.svjob.exception.ApiException;
 import vn.vlu.svjob.repository.EmployerProfileRepository;
+import vn.vlu.svjob.repository.JobPostRepository;
+import vn.vlu.svjob.repository.ReviewRepository;
 import vn.vlu.svjob.repository.StudentProfileRepository;
 import vn.vlu.svjob.repository.UserRepository;
 
+import java.util.List;
+
 import static vn.vlu.svjob.service.AuthService.blankToNull;
 
-/** Hồ sơ SV + upload CV (FR-04), hồ sơ NTD (FR-05). */
+/** Hồ sơ SV + upload CV (FR-04), hồ sơ NTD (FR-05), trang công khai NTD (FR-19). */
 @Service
 public class ProfileService {
 
     private final UserRepository userRepository;
     private final StudentProfileRepository studentProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final JobPostRepository jobPostRepository;
+    private final ReviewRepository reviewRepository;
     private final FileStorageService fileStorageService;
 
     public ProfileService(UserRepository userRepository, StudentProfileRepository studentProfileRepository,
-                          EmployerProfileRepository employerProfileRepository, FileStorageService fileStorageService) {
+                          EmployerProfileRepository employerProfileRepository, JobPostRepository jobPostRepository,
+                          ReviewRepository reviewRepository, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.employerProfileRepository = employerProfileRepository;
+        this.jobPostRepository = jobPostRepository;
+        this.reviewRepository = reviewRepository;
         this.fileStorageService = fileStorageService;
     }
 
@@ -41,8 +53,8 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public StudentProfileResponse getStudent(Long userId) {
         User u = findUser(userId);
-        // Điểm đánh giá sẽ có ở buổi 8 (FR-18)
-        return StudentProfileResponse.from(u, studentProfile(userId), null, 0);
+        return StudentProfileResponse.from(u, studentProfile(userId),
+                reviewRepository.averageRating(userId), reviewRepository.countByRevieweeId(userId));
     }
 
     @Transactional
@@ -98,9 +110,20 @@ public class ProfileService {
         return toEmployerResponse(u);
     }
 
+    @Transactional(readOnly = true)
+    public EmployerPublicResponse publicEmployer(Long userId) {
+        EmployerProfileResponse profile = getEmployer(userId);
+        List<JobSummary> openJobs = jobPostRepository.findByEmployerIdOrderByCreatedAtDesc(userId).stream()
+                .filter(j -> j.getStatus() == JobStatus.OPEN)
+                .map(j -> JobSummary.from(j, profile.companyName(), 0, 0))
+                .toList();
+        return new EmployerPublicResponse(profile, openJobs);
+    }
+
     /** Dùng chung cho chi tiết tin (FR-11). */
     EmployerProfileResponse toEmployerResponse(User u) {
-        return EmployerProfileResponse.from(u, employerProfile(u.getId()), null, 0);
+        return EmployerProfileResponse.from(u, employerProfile(u.getId()),
+                reviewRepository.averageRating(u.getId()), reviewRepository.countByRevieweeId(u.getId()));
     }
 
     String companyName(Long employerId) {
