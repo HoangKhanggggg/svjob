@@ -9,6 +9,7 @@ import vn.vlu.svjob.dto.CommonDtos.PageResponse;
 import vn.vlu.svjob.dto.JobDtos.JobDetail;
 import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
+import vn.vlu.svjob.entity.Application;
 import vn.vlu.svjob.entity.ApplicationStatus;
 import vn.vlu.svjob.entity.JobPost;
 import vn.vlu.svjob.entity.JobStatus;
@@ -22,24 +23,37 @@ import vn.vlu.svjob.repository.UserRepository;
 import vn.vlu.svjob.security.UserPrincipal;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-/** Tin tuyển dụng: đăng, sửa, xóa, tìm kiếm (FR-06 → FR-11). */
+/** Tin tuyển dụng: đăng, sửa, đóng, xóa, tìm kiếm, trạng thái công việc (FR-06 → FR-11, FR-16). */
 @Service
 public class JobService {
+
+    /**
+     * Các bước chuyển trạng thái hợp lệ (BR-09). Không có trong bảng này = chuyển sai luồng.
+     * OPEN -> FILLED -> COMPLETED; OPEN/FILLED -> CLOSED (NTD chủ động đóng tin).
+     */
+    static final Map<JobStatus, Set<JobStatus>> ALLOWED = Map.of(
+            JobStatus.OPEN, Set.of(JobStatus.FILLED, JobStatus.CLOSED),
+            JobStatus.FILLED, Set.of(JobStatus.COMPLETED, JobStatus.CLOSED));
 
     private final JobPostRepository jobPostRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final CategoryService categoryService;
     private final ProfileService profileService;
+    private final NotificationService notificationService;
 
     public JobService(JobPostRepository jobPostRepository, ApplicationRepository applicationRepository,
-                      UserRepository userRepository, CategoryService categoryService, ProfileService profileService) {
+                      UserRepository userRepository, CategoryService categoryService, ProfileService profileService,
+                      NotificationService notificationService) {
         this.jobPostRepository = jobPostRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.categoryService = categoryService;
         this.profileService = profileService;
+        this.notificationService = notificationService;
     }
 
     // ---------- Xem / tìm kiếm (công khai) ----------
@@ -99,6 +113,31 @@ public class JobService {
         return JobDetail.from(job, accepted, profileService.toEmployerResponse(job.getEmployer()));
     }
 
+    /** FR-07 (đóng tin) và FR-16 (Đã nhận người, Hoàn thành). */
+    @Transactional
+    public JobDetail changeStatus(Long employerId, Long jobId, JobStatus target) {
+        JobPost job = findOwned(jobId, employerId);
+        if (!ALLOWED.getOrDefault(job.getStatus(), Set.of()).contains(target)) {
+            throw ApiException.conflict("Không thể chuyển trạng thái từ " + label(job.getStatus())
+                    + " sang " + label(target));
+        }
+        long accepted = applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED);
+        if (target == JobStatus.FILLED && accepted == 0) {
+            throw ApiException.conflict("Cần nhận ít nhất 1 ứng viên trước khi chuyển sang Đã nhận người");
+        }
+        job.setStatus(target);
+        // Khi ngừng tuyển: các đơn còn Chờ duyệt tự chuyển Bị từ chối (câu hỏi C2 ở SRS)
+        if (target == JobStatus.FILLED || target == JobStatus.CLOSED) {
+            rejectPending(job, "Tin “" + job.getTitle() + "” đã ngừng nhận hồ sơ, đơn của bạn không được chọn");
+        }
+        if (target == JobStatus.COMPLETED) {
+            applicationRepository.findByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED).forEach(a ->
+                    notificationService.notify(a.getStudent(), "Công việc “" + job.getTitle()
+                            + "” đã hoàn thành, hãy đánh giá nhà tuyển dụng", "/student/applications"));
+        }
+        return JobDetail.from(job, accepted, profileService.toEmployerResponse(job.getEmployer()));
+    }
+
     /** FR-07, BR-04: không xóa được tin đã có người được nhận (chỉ được đóng). */
     @Transactional
     public void delete(Long employerId, Long jobId) {
@@ -140,6 +179,14 @@ public class JobService {
         return job.getEmployer().getId().equals(userId);
     }
 
+    private void rejectPending(JobPost job, String message) {
+        for (Application a : applicationRepository.findByJobIdAndStatus(job.getId(), ApplicationStatus.PENDING)) {
+            a.setStatus(ApplicationStatus.REJECTED);
+            a.setProcessedAt(java.time.LocalDateTime.now());
+            notificationService.notify(a.getStudent(), message, "/student/applications");
+        }
+    }
+
     private void validateSalary(JobRequest req) {
         if (req.salaryMax() != null && req.salaryMax() < req.salaryMin()) {
             throw ApiException.badRequest("Lương đến phải lớn hơn hoặc bằng lương từ");
@@ -157,5 +204,15 @@ public class JobService {
         job.setWorkTime(req.workTime().trim());
         job.setQuantity(req.quantity());
         job.setDeadline(req.deadline());
+    }
+
+    static String label(JobStatus s) {
+        return switch (s) {
+            case OPEN -> "Đang tuyển";
+            case FILLED -> "Đã nhận người";
+            case COMPLETED -> "Hoàn thành";
+            case CLOSED -> "Đã đóng";
+            case HIDDEN -> "Bị ẩn";
+        };
     }
 }

@@ -9,13 +9,14 @@ import vn.vlu.svjob.dto.CommonDtos.PageResponse;
 import vn.vlu.svjob.dto.JobDtos.JobDetail;
 import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
+import vn.vlu.svjob.dto.JobDtos.StatusRequest;
 import vn.vlu.svjob.security.UserPrincipal;
 import vn.vlu.svjob.service.CategoryService;
 import vn.vlu.svjob.service.JobService;
 
 import java.util.List;
 
-/** Tin tuyển dụng và danh mục ngành nghề (FR-06 → FR-11). */
+/** Tin tuyển dụng và danh mục ngành nghề (FR-06 → FR-11, FR-16). */
 @RestController
 @RequestMapping("/api")
 public class JobController {
@@ -59,6 +60,12 @@ public class JobController {
     public JobDetail update(@AuthenticationPrincipal UserPrincipal me, @PathVariable Long id,
                             @Valid @RequestBody JobRequest req) {
         return jobService.update(me.id(), id, req);
+    }
+
+    @PatchMapping("/jobs/{id}/status")
+    public JobDetail changeStatus(@AuthenticationPrincipal UserPrincipal me, @PathVariable Long id,
+                                  @Valid @RequestBody StatusRequest req) {
+        return jobService.changeStatus(me.id(), id, req.status());
     }
 
     @DeleteMapping("/jobs/{id}")
