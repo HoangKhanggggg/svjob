@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Avatar from './Avatar';
 import { formatSalary } from '../utils/format';
+import { shiftLabel, hourRange } from '../shifts';
 import { daysLeft, isNew, timeAgo } from '../utils/ui';
 
 /** Một dòng tin tuyển dụng trong danh sách: logo, tên việc, công ty, lương, các thẻ thông tin. */
@@ -14,6 +15,7 @@ export default function JobCard({ job }) {
           <div className="d-flex justify-content-between align-items-start gap-3">
             <div style={{ minWidth: 0 }}>
               <div className="job-title">
+                {job.urgent && <span className="tag-urgent me-1"><i className="bi bi-lightning-charge-fill" /> GẤP</span>}
                 {isNew(job.createdAt) && <span className="tag-new me-1">MỚI</span>}
                 {job.title}
               </div>
@@ -25,6 +27,8 @@ export default function JobCard({ job }) {
           <div className="d-flex flex-wrap gap-1 mt-2">
             <span className="tag">{job.location}</span>
             <span className="tag">{job.workTime}</span>
+            {job.shift && job.shift !== 'FLEXIBLE' && <span className="tag"><i className="bi bi-clock me-1" />{shiftLabel(job.shift)}</span>}
+            {job.startHour != null && <span className="tag">{hourRange(job.startHour, job.endHour)}</span>}
             <span className="tag">{job.categoryName}</span>
             {job.quantity > 1 && <span className="tag">Tuyển {job.quantity} người</span>}
           </div>

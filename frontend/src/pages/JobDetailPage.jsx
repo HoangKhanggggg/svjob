@@ -10,6 +10,7 @@ import Stars from '../components/Stars';
 import Avatar from '../components/Avatar';
 import { formatDate, formatSalary } from '../utils/format';
 import { daysLeft, timeAgo } from '../utils/ui';
+import { shiftLabel } from '../shifts';
 
 /** Chi tiết tin + thông tin NTD (FR-11) và form ứng tuyển (FR-12). */
 export default function JobDetailPage() {
@@ -42,7 +43,7 @@ export default function JobDetailPage() {
           <div className="sv-card mb-3">
             <div className="detail-head">
               <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
-                <h3 className="fw-bold mb-0">{job.title}</h3>
+                <h3 className="fw-bold mb-0">{job.urgent && <span className="tag-urgent me-2"><i className="bi bi-lightning-charge-fill" /> GẤP</span>}{job.title}</h3>
                 <JobStatusBadge status={job.status} />
               </div>
               <div className="row g-3">
@@ -58,7 +59,7 @@ export default function JobDetailPage() {
               <h5 className="content-h">Mô tả công việc</h5>
               <p className="pre-line mb-0" style={{ lineHeight: 1.75 }}>{job.description}</p>
               <h5 className="content-h">Thời gian làm việc</h5>
-              <p className="mb-0">{job.workTime}</p>
+              <p className="mb-0">{job.workTime}{job.shift && job.shift !== 'FLEXIBLE' && <span className="tag ms-2">{shiftLabel(job.shift)}</span>}</p>
             </div>
           </div>
         </div>
