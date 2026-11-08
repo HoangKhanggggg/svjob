@@ -49,6 +49,22 @@ public class JobPost {
     @Column(name = "work_time", nullable = false, length = 200)
     private String workTime;
 
+    /** Ca làm việc để lọc nhanh: sáng / chiều / tối / linh hoạt. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private WorkShift shift = WorkShift.FLEXIBLE;
+
+    /** Giờ bắt đầu / kết thúc (0–24) để sinh viên lọc theo khung giờ; null = không cố định giờ. */
+    @Column(name = "start_hour")
+    private Integer startHour;
+
+    @Column(name = "end_hour")
+    private Integer endHour;
+
+    /** Tin "Tuyển gấp": hiện huy hiệu và được ưu tiên đưa lên đầu danh sách. */
+    @Column(nullable = false)
+    private boolean urgent = false;
+
     @Column(nullable = false)
     private Integer quantity;
 

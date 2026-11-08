@@ -4,6 +4,9 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import vn.vlu.svjob.entity.JobPost;
 import vn.vlu.svjob.entity.JobStatus;
+import vn.vlu.svjob.entity.WorkShift;
+
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +22,21 @@ public final class JobSpecs {
 
     public static Specification<JobPost> filter(JobStatus status, String keyword, Integer categoryId,
                                                 String location, Integer minSalary, Integer maxSalary) {
+        return filter(status, keyword, categoryId, location, minSalary, maxSalary, null, null);
+    }
+
+    /** Thêm bộ lọc ca làm việc và thời gian đăng (trong N ngày gần nhất). */
+    public static Specification<JobPost> filter(JobStatus status, String keyword, Integer categoryId,
+                                                String location, Integer minSalary, Integer maxSalary,
+                                                WorkShift shift, Integer postedWithinDays) {
+        return filter(status, keyword, categoryId, location, minSalary, maxSalary, shift, postedWithinDays, null, null);
+    }
+
+    /** Thêm lọc khung giờ: tin làm trọn trong khoảng [fromHour, toHour]; tin không cố định giờ bị loại. */
+    public static Specification<JobPost> filter(JobStatus status, String keyword, Integer categoryId,
+                                                String location, Integer minSalary, Integer maxSalary,
+                                                WorkShift shift, Integer postedWithinDays,
+                                                Integer fromHour, Integer toHour) {
         return (root, query, cb) -> {
             List<Predicate> list = new ArrayList<>();
             if (status != null) {
@@ -41,6 +59,22 @@ public final class JobSpecs {
             }
             if (maxSalary != null) {
                 list.add(cb.lessThanOrEqualTo(root.get("salaryMin"), maxSalary));
+            }
+            if (shift != null) {
+                // Tin "linh hoạt" phù hợp với mọi ca nên luôn được giữ lại
+                list.add(cb.or(cb.equal(root.get("shift"), shift), cb.equal(root.get("shift"), WorkShift.FLEXIBLE)));
+            }
+            if (postedWithinDays != null && postedWithinDays > 0) {
+                list.add(cb.greaterThanOrEqualTo(root.get("createdAt"),
+                        LocalDateTime.now().minusDays(postedWithinDays)));
+            }
+            if (fromHour != null) {
+                list.add(cb.isNotNull(root.get("startHour")));
+                list.add(cb.greaterThanOrEqualTo(root.get("startHour"), fromHour));
+            }
+            if (toHour != null) {
+                list.add(cb.isNotNull(root.get("endHour")));
+                list.add(cb.lessThanOrEqualTo(root.get("endHour"), toHour));
             }
             return cb.and(list.toArray(new Predicate[0]));
         };

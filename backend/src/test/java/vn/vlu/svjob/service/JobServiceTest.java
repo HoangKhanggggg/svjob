@@ -44,6 +44,61 @@ class JobServiceTest {
     }
 
     @Test
+    void taoTinCoCaLamVaTuyenGap_luuDungGiaTri() {
+        when(categoryService.findActive(1)).thenReturn(new JobCategory());
+        when(userRepository.getReferenceById(2L)).thenReturn(owner);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(owner));
+        when(jobPostRepository.save(any(JobPost.class))).thenAnswer(i -> i.getArgument(0));
+        var req = new vn.vlu.svjob.dto.JobDtos.JobRequest("Phục vụ", 1, "Mô tả", 25000, 30000, SalaryUnit.HOUR,
+                "Bình Thạnh", "Ca tối", 2, java.time.LocalDate.now().plusDays(10), WorkShift.EVENING, true);
+
+        jobService.create(2L, req);
+
+        var cap = org.mockito.ArgumentCaptor.forClass(JobPost.class);
+        verify(jobPostRepository).save(cap.capture());
+        assertThat(cap.getValue().getShift()).isEqualTo(WorkShift.EVENING);
+        assertThat(cap.getValue().isUrgent()).isTrue();
+    }
+
+    @Test
+    void taoTinKhongChonCa_macDinhLinhHoatVaKhongGap() {
+        when(categoryService.findActive(1)).thenReturn(new JobCategory());
+        when(userRepository.getReferenceById(2L)).thenReturn(owner);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(owner));
+        when(jobPostRepository.save(any(JobPost.class))).thenAnswer(i -> i.getArgument(0));
+
+        jobService.create(2L, jobRequest(25000, 30000));
+
+        var cap = org.mockito.ArgumentCaptor.forClass(JobPost.class);
+        verify(jobPostRepository).save(cap.capture());
+        assertThat(cap.getValue().getShift()).isEqualTo(WorkShift.FLEXIBLE);
+        assertThat(cap.getValue().isUrgent()).isFalse();
+    }
+
+    @Test
+    void taoTinGioKetThucTruocGioBatDau_bao400() {
+        var req = new vn.vlu.svjob.dto.JobDtos.JobRequest("Phục vụ", 1, "Mô tả", 25000, 30000, SalaryUnit.HOUR,
+                "Bình Thạnh", "18h-12h", 2, java.time.LocalDate.now().plusDays(10), WorkShift.EVENING, false, 18, 12);
+        assertThatThrownBy(() -> jobService.create(2L, req))
+                .hasMessage("Giờ kết thúc phải sau giờ bắt đầu")
+                .extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
+        verify(jobPostRepository, never()).save(any());
+    }
+
+    @Test
+    void taoTinChiNhapMotGio_bao400() {
+        var req = new vn.vlu.svjob.dto.JobDtos.JobRequest("Phục vụ", 1, "Mô tả", 25000, 30000, SalaryUnit.HOUR,
+                "Bình Thạnh", "từ 18h", 2, java.time.LocalDate.now().plusDays(10), WorkShift.EVENING, false, 18, null);
+        assertThatThrownBy(() -> jobService.create(2L, req)).hasMessage("Cần nhập cả giờ bắt đầu và giờ kết thúc");
+    }
+
+    @Test
+    void timKiemKhungGioNguocNhau_bao400() {
+        assertThatThrownBy(() -> jobService.search(null, null, null, null, null, null, null, 22, 17, 0, 10))
+                .hasMessage("Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
+    }
+
+    @Test
     void UT05_ntdKhacSuaTin_bao403() {
         when(jobPostRepository.findById(10L)).thenReturn(Optional.of(job(10, owner, JobStatus.OPEN, 2)));
 

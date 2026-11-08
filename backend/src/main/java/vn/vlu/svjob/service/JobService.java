@@ -15,6 +15,7 @@ import vn.vlu.svjob.entity.JobPost;
 import vn.vlu.svjob.entity.JobStatus;
 import vn.vlu.svjob.entity.Role;
 import vn.vlu.svjob.entity.User;
+import vn.vlu.svjob.entity.WorkShift;
 import vn.vlu.svjob.exception.ApiException;
 import vn.vlu.svjob.repository.ApplicationRepository;
 import vn.vlu.svjob.repository.JobPostRepository;
@@ -62,10 +63,32 @@ public class JobService {
     @Transactional(readOnly = true)
     public PageResponse<JobSummary> search(String keyword, Integer categoryId, String location,
                                            Integer minSalary, Integer maxSalary, int page, int size) {
+        return search(keyword, categoryId, location, minSalary, maxSalary, null, null, page, size);
+    }
+
+    /** Bản đầy đủ: thêm lọc ca làm việc, lọc theo thời gian đăng; tin "Tuyển gấp" lên đầu. */
+    @Transactional(readOnly = true)
+    public PageResponse<JobSummary> search(String keyword, Integer categoryId, String location,
+                                           Integer minSalary, Integer maxSalary, WorkShift shift,
+                                           Integer postedWithinDays, int page, int size) {
+        return search(keyword, categoryId, location, minSalary, maxSalary, shift, postedWithinDays, null, null,
+                page, size);
+    }
+
+    /** Thêm lọc theo khung giờ làm (từ giờ X đến giờ Y). */
+    @Transactional(readOnly = true)
+    public PageResponse<JobSummary> search(String keyword, Integer categoryId, String location,
+                                           Integer minSalary, Integer maxSalary, WorkShift shift,
+                                           Integer postedWithinDays, Integer fromHour, Integer toHour,
+                                           int page, int size) {
+        if (fromHour != null && toHour != null && fromHour >= toHour) {
+            throw ApiException.badRequest("Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
+        }
         var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 20),
-                Sort.by(Sort.Direction.DESC, "createdAt"));
+                Sort.by(Sort.Order.desc("urgent"), Sort.Order.desc("createdAt")));
         Page<JobPost> result = jobPostRepository.findAll(
-                JobSpecs.filter(JobStatus.OPEN, keyword, categoryId, location, minSalary, maxSalary), pageable);
+                JobSpecs.filter(JobStatus.OPEN, keyword, categoryId, location, minSalary, maxSalary, shift,
+                        postedWithinDays, fromHour, toHour), pageable);
         return PageResponse.of(result.map(j -> JobSummary.from(j, profileService.companyName(j.getEmployer().getId()), 0, 0)));
     }
 
@@ -88,6 +111,7 @@ public class JobService {
     @Transactional
     public JobDetail create(Long employerId, JobRequest req) {
         validateSalary(req);
+        validateHours(req);
         User employer = userRepository.getReferenceById(employerId);
         JobPost job = new JobPost();
         job.setEmployer(employer);
@@ -105,6 +129,7 @@ public class JobService {
             throw ApiException.conflict("Không thể sửa tin ở trạng thái hiện tại");
         }
         validateSalary(req);
+        validateHours(req);
         long accepted = applicationRepository.countByJobIdAndStatus(jobId, ApplicationStatus.ACCEPTED);
         if (req.quantity() < accepted) {
             throw ApiException.conflict("Số lượng cần tuyển không được nhỏ hơn số người đã nhận (" + accepted + ")");
@@ -223,6 +248,15 @@ public class JobService {
         }
     }
 
+    private void validateHours(JobRequest req) {
+        if ((req.startHour() == null) != (req.endHour() == null)) {
+            throw ApiException.badRequest("Cần nhập cả giờ bắt đầu và giờ kết thúc");
+        }
+        if (req.startHour() != null && req.startHour() >= req.endHour()) {
+            throw ApiException.badRequest("Giờ kết thúc phải sau giờ bắt đầu");
+        }
+    }
+
     private void validateSalary(JobRequest req) {
         if (req.salaryMax() != null && req.salaryMax() < req.salaryMin()) {
             throw ApiException.badRequest("Lương đến phải lớn hơn hoặc bằng lương từ");
@@ -238,6 +272,10 @@ public class JobService {
         job.setSalaryUnit(req.salaryUnit());
         job.setLocation(req.location().trim());
         job.setWorkTime(req.workTime().trim());
+        job.setShift(req.shift() != null ? req.shift() : WorkShift.FLEXIBLE);
+        job.setUrgent(Boolean.TRUE.equals(req.urgent()));
+        job.setStartHour(req.startHour());
+        job.setEndHour(req.endHour());
         job.setQuantity(req.quantity());
         job.setDeadline(req.deadline());
     }

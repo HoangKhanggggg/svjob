@@ -11,6 +11,7 @@ import vn.vlu.svjob.dto.JobDtos.JobRequest;
 import vn.vlu.svjob.dto.JobDtos.JobSummary;
 import vn.vlu.svjob.dto.JobDtos.StatusRequest;
 import vn.vlu.svjob.security.UserPrincipal;
+import vn.vlu.svjob.entity.WorkShift;
 import vn.vlu.svjob.service.CategoryService;
 import vn.vlu.svjob.service.JobService;
 
@@ -40,9 +41,13 @@ public class JobController {
                                            @RequestParam(required = false) String location,
                                            @RequestParam(required = false) Integer minSalary,
                                            @RequestParam(required = false) Integer maxSalary,
+                                           @RequestParam(required = false) WorkShift shift,
+                                           @RequestParam(required = false) Integer postedWithin,
+                                           @RequestParam(required = false) Integer fromHour,
+                                           @RequestParam(required = false) Integer toHour,
                                            @RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "10") int size) {
-        return jobService.search(keyword, categoryId, location, minSalary, maxSalary, page, size);
+        return jobService.search(keyword, categoryId, location, minSalary, maxSalary, shift, postedWithin, fromHour, toHour, page, size);
     }
 
     @GetMapping("/jobs/{id}")

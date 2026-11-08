@@ -3,3 +3,10 @@
 DB_USERNAME=root
 DB_PASSWORD=mat_khau_mysql_cua_ban
 # DB_URL=jdbc:mysql://localhost:3306/svjob?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Ho_Chi_Minh
+
+# --- Email (tùy chọn): bật để gửi mail thật khi NTD nhận đơn ---
+# MAIL_ENABLED=true
+# MAIL_HOST=smtp.gmail.com
+# MAIL_PORT=587
+# MAIL_USERNAME=email_cua_ban@gmail.com
+# MAIL_PASSWORD=mat_khau_ung_dung_16_ky_tu

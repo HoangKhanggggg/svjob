@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import vn.vlu.svjob.entity.JobPost;
 import vn.vlu.svjob.entity.JobStatus;
 import vn.vlu.svjob.entity.SalaryUnit;
+import vn.vlu.svjob.entity.WorkShift;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,7 +31,27 @@ public final class JobDtos {
             @NotBlank(message = "Không được để trống") @Size(max = 200) String workTime,
             @NotNull(message = "Không được để trống") @Min(value = 1, message = "Cần tuyển ít nhất 1 người")
             @Max(value = 100, message = "Tối đa 100 người") Integer quantity,
-            @NotNull(message = "Không được để trống") @Future(message = "Hạn nộp phải sau ngày hôm nay") LocalDate deadline) {
+            @NotNull(message = "Không được để trống") @Future(message = "Hạn nộp phải sau ngày hôm nay") LocalDate deadline,
+            WorkShift shift,
+            Boolean urgent,
+            @Min(value = 0, message = "Giờ từ 0 đến 24") @Max(value = 24, message = "Giờ từ 0 đến 24") Integer startHour,
+            @Min(value = 0, message = "Giờ từ 0 đến 24") @Max(value = 24, message = "Giờ từ 0 đến 24") Integer endHour) {
+
+        /** Chữ ký có ca + gấp, chưa có giờ. */
+        public JobRequest(String title, Integer categoryId, String description, Integer salaryMin, Integer salaryMax,
+                          SalaryUnit salaryUnit, String location, String workTime, Integer quantity,
+                          LocalDate deadline, WorkShift shift, Boolean urgent) {
+            this(title, categoryId, description, salaryMin, salaryMax, salaryUnit, location, workTime, quantity,
+                    deadline, shift, urgent, null, null);
+        }
+
+        /** Giữ chữ ký cũ (không ca, không gấp) cho code/test đã có. */
+        public JobRequest(String title, Integer categoryId, String description, Integer salaryMin, Integer salaryMax,
+                          SalaryUnit salaryUnit, String location, String workTime, Integer quantity,
+                          LocalDate deadline) {
+            this(title, categoryId, description, salaryMin, salaryMax, salaryUnit, location, workTime, quantity,
+                    deadline, null, null, null, null);
+        }
     }
 
     public record StatusRequest(@NotNull(message = "Vui lòng chọn trạng thái") JobStatus status) {
@@ -43,12 +64,13 @@ public final class JobDtos {
     public record JobSummary(Long id, String title, String categoryName, String companyName, Integer salaryMin,
                              Integer salaryMax, SalaryUnit salaryUnit, String location, String workTime,
                              Integer quantity, LocalDate deadline, JobStatus status, String hiddenReason,
-                             LocalDateTime createdAt, Long employerId, long pendingCount, long acceptedCount) {
+                             LocalDateTime createdAt, Long employerId, long pendingCount, long acceptedCount,
+                             WorkShift shift, boolean urgent, Integer startHour, Integer endHour) {
         public static JobSummary from(JobPost j, String companyName, long pending, long accepted) {
             return new JobSummary(j.getId(), j.getTitle(), j.getCategory().getName(), companyName, j.getSalaryMin(),
                     j.getSalaryMax(), j.getSalaryUnit(), j.getLocation(), j.getWorkTime(), j.getQuantity(),
                     j.getDeadline(), j.getStatus(), j.getHiddenReason(), j.getCreatedAt(), j.getEmployer().getId(),
-                    pending, accepted);
+                    pending, accepted, j.getShift(), j.isUrgent(), j.getStartHour(), j.getEndHour());
         }
     }
 
@@ -56,12 +78,13 @@ public final class JobDtos {
     public record JobDetail(Long id, String title, Integer categoryId, String categoryName, String description,
                             Integer salaryMin, Integer salaryMax, SalaryUnit salaryUnit, String location,
                             String workTime, Integer quantity, long acceptedCount, LocalDate deadline,
-                            JobStatus status, LocalDateTime createdAt, ProfileDtos.EmployerProfileResponse employer) {
+                            JobStatus status, LocalDateTime createdAt, ProfileDtos.EmployerProfileResponse employer,
+                            WorkShift shift, boolean urgent, Integer startHour, Integer endHour) {
         public static JobDetail from(JobPost j, long accepted, ProfileDtos.EmployerProfileResponse employer) {
             return new JobDetail(j.getId(), j.getTitle(), j.getCategory().getId(), j.getCategory().getName(),
                     j.getDescription(), j.getSalaryMin(), j.getSalaryMax(), j.getSalaryUnit(), j.getLocation(),
                     j.getWorkTime(), j.getQuantity(), accepted, j.getDeadline(), j.getStatus(), j.getCreatedAt(),
-                    employer);
+                    employer, j.getShift(), j.isUrgent(), j.getStartHour(), j.getEndHour());
         }
     }
 }

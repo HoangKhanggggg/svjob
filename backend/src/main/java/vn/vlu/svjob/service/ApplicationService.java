@@ -38,11 +38,13 @@ public class ApplicationService {
     private final ProfileService profileService;
     private final FileStorageService fileStorageService;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     public ApplicationService(ApplicationRepository applicationRepository,
                               StudentProfileRepository studentProfileRepository, UserRepository userRepository,
                               ReviewRepository reviewRepository, JobService jobService, ProfileService profileService,
-                              FileStorageService fileStorageService, NotificationService notificationService) {
+                              FileStorageService fileStorageService, NotificationService notificationService,
+                              EmailService emailService) {
         this.applicationRepository = applicationRepository;
         this.studentProfileRepository = studentProfileRepository;
         this.userRepository = userRepository;
@@ -51,6 +53,7 @@ public class ApplicationService {
         this.profileService = profileService;
         this.fileStorageService = fileStorageService;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     /**
@@ -162,6 +165,10 @@ public class ApplicationService {
                 ? "Chúc mừng! Đơn ứng tuyển “" + job.getTitle() + "” của bạn đã được nhận"
                 : "Đơn ứng tuyển “" + job.getTitle() + "” của bạn chưa phù hợp lần này";
         notificationService.notify(a.getStudent(), msg, "/student/applications");
+        if (decision == ApplicationStatus.ACCEPTED) {
+            emailService.sendApplicationAccepted(a.getStudent().getEmail(), a.getStudent().getFullName(),
+                    job.getTitle(), profileService.companyName(job.getEmployer().getId()));
+        }
         return toResult(a);
     }
 
