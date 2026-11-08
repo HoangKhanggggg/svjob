@@ -339,3 +339,23 @@ INSERT INTO reviews (job_id, reviewer_id, reviewee_id, rating, comment, created_
  (41, 7, 14, 4, 'Quản lý hướng dẫn tận tình.', '2026-10-04 05:00:00'),
  (50, 16, 26, 5, 'Nhanh nhẹn, thân thiện với khách.', '2026-09-29 20:00:00'),
  (50, 26, 16, 4, 'Hơi đông khách nhưng được hỗ trợ tốt.', '2026-09-29 23:00:00');
+
+-- Ca làm việc + tin "Tuyển gấp" (bộ lọc theo góp ý giảng viên): suy ra ca từ cột work_time của dữ liệu mẫu
+UPDATE job_posts SET shift = CASE
+    WHEN work_time LIKE '%sáng%' THEN 'MORNING'
+    WHEN work_time LIKE '%trưa%' THEN 'NOON'
+    WHEN work_time LIKE '%chiều%' THEN 'AFTERNOON'
+    WHEN work_time LIKE '%tối%' THEN 'EVENING'
+    ELSE 'FLEXIBLE' END;
+-- Giờ làm: lấy từ chuỗi dạng "18h-22h" trong work_time (không có thì để NULL)
+UPDATE job_posts SET
+    start_hour = CAST(REGEXP_SUBSTR(REGEXP_SUBSTR(work_time, '[0-9]{1,2}h([0-9]{2})?[-–][0-9]{1,2}h'), '^[0-9]+') AS UNSIGNED),
+    end_hour   = CAST(REGEXP_SUBSTR(REGEXP_SUBSTR(work_time, '[0-9]{1,2}h([0-9]{2})?[-–][0-9]{1,2}h'), '[0-9]+(?=h$)') AS UNSIGNED)
+WHERE work_time REGEXP '[0-9]{1,2}h([0-9]{2})?[-–][0-9]{1,2}h';
+UPDATE job_posts SET start_hour = NULL, end_hour = NULL WHERE start_hour >= end_hour;
+UPDATE job_posts SET urgent = TRUE WHERE id IN (1, 4, 12, 21, 33, 45);
+-- Vài tin đăng gần đây (tính theo ngày chạy seed) để demo bộ lọc "Thời gian đăng"
+UPDATE job_posts SET created_at = NOW() - INTERVAL 2 HOUR WHERE id = 21;
+UPDATE job_posts SET created_at = NOW() - INTERVAL 1 DAY WHERE id = 1;
+UPDATE job_posts SET created_at = NOW() - INTERVAL 3 DAY WHERE id IN (12, 22);
+UPDATE job_posts SET created_at = NOW() - INTERVAL 10 DAY WHERE id IN (23, 13);
