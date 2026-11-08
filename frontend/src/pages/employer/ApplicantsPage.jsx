@@ -4,6 +4,7 @@ import applicationApi from '../../api/applicationApi';
 import jobApi from '../../api/jobApi';
 import { errorMessage } from '../../api/axiosClient';
 import { AppStatusBadge, JobStatusBadge } from '../../components/StatusBadge';
+import ReviewModal from '../../components/ReviewModal';
 import { formatDateTime, openBlob } from '../../utils/format';
 import Avatar from '../../components/Avatar';
 import EmptyState from '../../components/EmptyState';
@@ -11,12 +12,13 @@ import { timeAgo } from '../../utils/ui';
 
 const TABS = [['ALL', 'Tất cả'], ['PENDING', 'Chờ duyệt'], ['ACCEPTED', 'Được nhận'], ['REJECTED', 'Bị từ chối'], ['WITHDRAWN', 'Đã rút']];
 
-/** Danh sách ứng viên của tin (FR-14), duyệt / từ chối (FR-15). */
+/** Danh sách ứng viên của tin (FR-14), duyệt / từ chối (FR-15), đánh giá SV sau khi hoàn thành (FR-18). */
 export default function ApplicantsPage() {
   const { id } = useParams();
   const [job, setJob] = useState(null);
   const [list, setList] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [reviewing, setReviewing] = useState(null);
   const [tab, setTab] = useState('ALL');
 
   const load = () => {
@@ -90,6 +92,7 @@ export default function ApplicantsPage() {
                   </div>
                 )}
                 <div className="small"><i className="bi bi-envelope text-muted" /> {a.email} {a.phone && <><i className="bi bi-telephone text-muted ms-2" /> {a.phone}</>}</div>
+                {a.avgRating != null && <div className="small"><i className="bi bi-star-fill star" /> {a.avgRating.toFixed(1)}/5 · <Link to={`/reviews/${a.studentId}`}>xem đánh giá</Link></div>}
                 </div>
               </div>
               <div className="d-flex gap-2 align-items-start flex-wrap">
@@ -100,6 +103,10 @@ export default function ApplicantsPage() {
                     <button className="btn btn-sm btn-outline-danger" onClick={() => decide(a, 'REJECTED')}><i className="bi bi-x-lg" /> Từ chối</button>
                   </>
                 )}
+                {a.status === 'ACCEPTED' && job?.status === 'COMPLETED' && !a.reviewed && (
+                  <button className="btn btn-sm btn-warning" onClick={() => setReviewing(a)}>Đánh giá</button>
+                )}
+                {a.reviewed && <span className="small text-success">Đã đánh giá</span>}
               </div>
             </div>
             {a.skills && (
@@ -113,6 +120,11 @@ export default function ApplicantsPage() {
           </div>
         </div>
       ))}
+      {reviewing && (
+        <ReviewModal jobId={Number(id)} reviewee={{ id: reviewing.studentId, name: reviewing.fullName }}
+          onClose={() => setReviewing(null)}
+          onDone={() => { setReviewing(null); setMsg({ ok: true, text: 'Đã gửi đánh giá' }); load(); }} />
+      )}
     </>
   );
 }
