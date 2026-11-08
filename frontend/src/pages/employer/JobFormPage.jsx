@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import jobApi from '../../api/jobApi';
 import { errorMessage, fieldErrors } from '../../api/axiosClient';
+import { SHIFTS, HOURS } from '../../shifts';
 
 const EMPTY = { title: '', categoryId: '', description: '', salaryMin: '', salaryMax: '', salaryUnit: 'HOUR',
-  location: '', workTime: '', quantity: 1, deadline: '' };
+  location: '', workTime: '', shift: 'FLEXIBLE', startHour: '', endHour: '', urgent: false, quantity: 1, deadline: '' };
 
 /** Đăng tin (FR-06) và sửa tin (FR-07) dùng chung 1 form. */
 export default function JobFormPage() {
@@ -22,7 +23,7 @@ export default function JobFormPage() {
     if (editing) {
       jobApi.detail(id).then((j) => setForm({
         title: j.title, categoryId: j.categoryId, description: j.description, salaryMin: j.salaryMin,
-        salaryMax: j.salaryMax ?? '', salaryUnit: j.salaryUnit, location: j.location, workTime: j.workTime,
+        salaryMax: j.salaryMax ?? '', salaryUnit: j.salaryUnit, location: j.location, workTime: j.workTime, shift: j.shift || 'FLEXIBLE', startHour: j.startHour ?? '', endHour: j.endHour ?? '', urgent: Boolean(j.urgent),
         quantity: j.quantity, deadline: j.deadline,
       })).catch((err) => setError(errorMessage(err)));
     }
@@ -34,6 +35,8 @@ export default function JobFormPage() {
     if (!form.categoryId) e.categoryId = 'Vui lòng chọn ngành nghề';
     if (form.salaryMin === '' || Number(form.salaryMin) < 0) e.salaryMin = 'Nhập mức lương hợp lệ';
     if (form.salaryMax !== '' && Number(form.salaryMax) < Number(form.salaryMin)) e.salaryMax = 'Phải lớn hơn hoặc bằng lương từ';
+    if ((form.startHour === '') !== (form.endHour === '')) e.endHour = 'Nhập cả giờ bắt đầu và giờ kết thúc';
+    else if (form.startHour !== '' && Number(form.startHour) >= Number(form.endHour)) e.endHour = 'Giờ kết thúc phải sau giờ bắt đầu';
     if (Number(form.quantity) < 1) e.quantity = 'Cần tuyển ít nhất 1 người';
     if (!form.deadline || new Date(form.deadline) <= new Date()) e.deadline = 'Hạn nộp phải sau ngày hôm nay';
     return e;
@@ -47,7 +50,8 @@ export default function JobFormPage() {
     setSaving(true);
     setError('');
     const data = { ...form, categoryId: Number(form.categoryId), salaryMin: Number(form.salaryMin),
-      salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax), quantity: Number(form.quantity) };
+      salaryMax: form.salaryMax === '' ? null : Number(form.salaryMax), quantity: Number(form.quantity),
+      startHour: form.startHour === '' ? null : Number(form.startHour), endHour: form.endHour === '' ? null : Number(form.endHour) };
     try {
       if (editing) await jobApi.update(id, data);
       else await jobApi.create(data);
@@ -116,6 +120,33 @@ export default function JobFormPage() {
               <label className="form-label">Thời gian làm việc *</label>
               <input className={`form-control ${invalid('workTime')}`} value={form.workTime} onChange={set('workTime')} placeholder="VD: Ca tối 18h-22h" />
               {feedback('workTime')}
+            </div>
+            <div className="col-md-6 mb-3">
+              <label className="form-label">Ca làm việc</label>
+              <select className="form-select" value={form.shift} onChange={set('shift')}>
+                {SHIFTS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+              </select>
+            </div>
+            <div className="col-md-3 mb-3">
+              <label className="form-label">Làm từ giờ</label>
+              <select className="form-select" value={form.startHour} onChange={set('startHour')}>
+                <option value="">Không cố định</option>
+                {HOURS.slice(0, 24).map((h) => <option key={h} value={h}>{h}h</option>)}
+              </select>
+            </div>
+            <div className="col-md-3 mb-3">
+              <label className="form-label">Đến giờ</label>
+              <select className={`form-select ${invalid('endHour')}`} value={form.endHour} onChange={set('endHour')}>
+                <option value="">Không cố định</option>
+                {HOURS.slice(1).map((h) => <option key={h} value={h}>{h}h</option>)}
+              </select>
+              {feedback('endHour')}
+            </div>
+            <div className="col-md-6 mb-3 d-flex align-items-end">
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" id="urgent" checked={form.urgent} onChange={(e) => setForm({ ...form, urgent: e.target.checked })} />
+                <label className="form-check-label" htmlFor="urgent">Tuyển gấp (hiện huy hiệu và lên đầu danh sách)</label>
+              </div>
             </div>
             <div className="col-md-3 mb-3">
               <label className="form-label">Số lượng *</label>

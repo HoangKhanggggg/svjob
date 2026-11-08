@@ -109,6 +109,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--sv-text); }
 .avatar { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; flex-shrink: 0; }
 .tag { display: inline-block; background: #f1f3f5; color: #3d4752; border-radius: 4px; padding: 2px 8px; font-size: .8rem; }
 .tag-new { background: #fff1e8; color: var(--sv-orange); font-weight: 600; font-size: .7rem; padding: 1px 6px; border-radius: 3px; vertical-align: 2px; }
+.tag-urgent { background: #fdecea; color: #d93025; font-weight: 700; font-size: .7rem; padding: 1px 6px; border-radius: 3px; vertical-align: 2px; }
 .tag-urgent { color: #d93025; font-size: .8rem; }
 .job-foot { border-top: 1px dashed var(--sv-border); margin-top: 10px; padding-top: 8px; font-size: .8rem; color: var(--sv-muted); }
 .badge { font-weight: 500; padding: .38em .65em; border-radius: 4px; }

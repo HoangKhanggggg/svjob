@@ -6,7 +6,7 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -15,9 +15,9 @@ axiosClient.interceptors.response.use(
   (res) => res.data,
   (error) => {
     // Token hết hạn (sau 60 phút) hoặc tài khoản bị khóa -> đăng xuất và về trang đăng nhập (TC-06)
-    if (error.response?.status === 401 && localStorage.getItem('token')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    if (error.response?.status === 401 && sessionStorage.getItem('token')) {
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       window.location.href = '/login?expired=1';
     }
     return Promise.reject(error);
