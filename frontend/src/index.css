@@ -172,4 +172,12 @@ h3 .badge, h4 .badge, h5 .badge, h6 .badge { font-size: .72rem; vertical-align: 
 .sv-footer a:hover { color: var(--sv-primary); }
 .sv-footer .bottom { border-top: 1px solid var(--sv-border); margin-top: 1.5rem; padding-top: 1rem; font-size: .8rem; }
 
+@media (max-width: 767.98px) {
+  .sv-navbar .nav-link { padding: .55rem 0 !important; border-bottom: 0; }
+  .search-box .cell + .cell { border-left: 0; border-top: 1px solid var(--sv-border); }
+  .search-band h1 { font-size: 1.3rem; }
+  .auth-form { padding: 1.5rem 1.2rem; }
+  .noti-menu { width: 300px; }
+  .job-card .logo-box { width: 48px !important; height: 48px !important; font-size: .9rem !important; }
+}
 .btn-success { --bs-btn-bg: #00843f; --bs-btn-border-color: #00843f; --bs-btn-hover-bg: #006e34; --bs-btn-hover-border-color: #006e34; --bs-btn-active-bg: #006e34; }
