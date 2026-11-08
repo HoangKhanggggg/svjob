@@ -11,6 +11,7 @@ const profileApi = {
   myCv: () => axiosClient.get('/students/me/cv', { responseType: 'blob' }),
   employer: () => axiosClient.get('/employers/me/profile'),
   updateEmployer: (data) => axiosClient.put('/employers/me/profile', data),
+  publicEmployer: (id) => axiosClient.get(`/employers/${id}`),
 };
 
 export default profileApi;

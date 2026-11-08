@@ -6,7 +6,10 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import HomePage from './pages/HomePage';
 import JobDetailPage from './pages/JobDetailPage';
+import EmployerPublicPage from './pages/EmployerPublicPage';
+import ReviewsPage from './pages/ReviewsPage';
 import StudentProfilePage from './pages/student/StudentProfilePage';
+import MyApplicationsPage from './pages/student/MyApplicationsPage';
 import EmployerProfilePage from './pages/employer/EmployerProfilePage';
 import MyJobsPage from './pages/employer/MyJobsPage';
 import JobFormPage from './pages/employer/JobFormPage';
@@ -29,8 +32,11 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
+          <Route path="/employers/:id" element={<EmployerPublicPage />} />
+          <Route path="/reviews/:id" element={<ReviewsPage />} />
 
           <Route path="/student/profile" element={guard(STUDENT, <StudentProfilePage />)} />
+          <Route path="/student/applications" element={guard(STUDENT, <MyApplicationsPage />)} />
 
           <Route path="/employer/profile" element={guard(EMPLOYER, <EmployerProfilePage />)} />
           <Route path="/employer/jobs" element={guard(EMPLOYER, <MyJobsPage />)} />
