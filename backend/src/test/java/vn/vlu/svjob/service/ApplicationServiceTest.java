@@ -32,6 +32,7 @@ class ApplicationServiceTest {
     @Mock ProfileService profileService;
     @Mock FileStorageService fileStorageService;
     @Mock NotificationService notificationService;
+    @Mock EmailService emailService;
     @InjectMocks ApplicationService applicationService;
 
     private final User employer = user(2, Role.EMPLOYER);
@@ -91,6 +92,19 @@ class ApplicationServiceTest {
         assertThat(a.getStatus()).isEqualTo(ApplicationStatus.ACCEPTED);
         assertThat(a.getProcessedAt()).isNotNull();
         verify(notificationService).notify(eq(student), any(), any());
+        verify(emailService).sendApplicationAccepted(eq("user3@vlu.vn"), eq("User 3"), any(), any());
+    }
+
+    @Test
+    void tuChoiDon_khongGuiEmail() {
+        JobPost job = job(10, employer, JobStatus.OPEN, 2);
+        Application a = application(5, job, student, ApplicationStatus.PENDING);
+        when(applicationRepository.findById(5L)).thenReturn(Optional.of(a));
+        when(jobService.findOwned(10L, 2L)).thenReturn(job);
+
+        applicationService.decide(2L, 5L, ApplicationStatus.REJECTED);
+
+        verify(emailService, never()).sendApplicationAccepted(any(), any(), any(), any());
     }
 
     @Test

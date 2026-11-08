@@ -268,7 +268,7 @@ class ServiceHappyPathTest {
     private ApplicationService applicationService(FileStorageService fs) {
         ProfileService ps = profileService(fs);
         return new ApplicationService(applicationRepository, studentProfileRepository, userRepository,
-                reviewRepository, jobService(ps), ps, fs, notifications());
+                reviewRepository, jobService(ps), ps, fs, notifications(), org.mockito.Mockito.mock(EmailService.class));
     }
 
     @Test
