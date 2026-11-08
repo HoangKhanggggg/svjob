@@ -4,8 +4,9 @@ import { errorMessage } from '../api/axiosClient';
 import JobCard from '../components/JobCard';
 import Pagination from '../components/Pagination';
 import EmptyState from '../components/EmptyState';
+import { SHIFTS, POSTED_WITHIN, HOURS } from '../shifts';
 
-const EMPTY = { keyword: '', categoryId: '', location: '', minSalary: '', maxSalary: '' };
+const EMPTY = { keyword: '', categoryId: '', location: '', minSalary: '', maxSalary: '', shift: '', postedWithin: '', fromHour: '', toHour: '' };
 const HOT_KEYS = ['Phục vụ', 'Gia sư', 'Bán hàng', 'Pha chế', 'Nhập liệu', 'Sự kiện'];
 const AREAS = ['Gò Vấp', 'Bình Thạnh', 'Quận 1', 'Thủ Đức', 'Quận 3', 'Quận 10', 'Phú Nhuận', 'Tân Bình', 'Online'];
 const SALARY_RANGES = [['Tất cả', '', ''], ['Dưới 30.000 đ', '', '30000'], ['30.000 – 100.000 đ', '30000', '100000'],
@@ -45,12 +46,18 @@ export default function HomePage() {
       setError('Lương từ phải nhỏ hơn hoặc bằng lương đến');
       return;
     }
+    if (filter.fromHour !== '' && filter.toHour !== '' && Number(filter.fromHour) >= Number(filter.toHour)) {
+      setError('Giờ bắt đầu phải nhỏ hơn giờ kết thúc');
+      return;
+    }
     apply(filter);
   };
 
   const pickCategory = (id) => apply({ ...applied, categoryId: String(applied.categoryId) === String(id) ? '' : String(id) });
   const pickArea = (area) => apply({ ...applied, location: applied.location === area ? '' : area });
   const pickSalary = (min, max) => apply({ ...applied, minSalary: min, maxSalary: max });
+  const pickShift = (v) => apply({ ...applied, shift: applied.shift === v ? '' : v });
+  const pickPosted = (v) => apply({ ...applied, postedWithin: v });
   const hotKey = (text) => apply({ ...EMPTY, keyword: text });
   const set = (key) => (e) => setFilter({ ...filter, [key]: e.target.value });
   const filtered = JSON.stringify(applied) !== JSON.stringify(EMPTY);
@@ -122,6 +129,39 @@ export default function HomePage() {
                     <button key={a} className={`btn btn-sm ${applied.location === a ? 'btn-primary' : 'btn-light border'}`} onClick={() => pickArea(a)}>{a}</button>
                   ))}
                 </div>
+              </div>
+              <div className="filter-group">
+                <h6>Ca làm việc</h6>
+                <div className="d-flex flex-wrap gap-1">
+                  {SHIFTS.map(([v, label, icon]) => (
+                    <button key={v} className={`btn btn-sm ${applied.shift === v ? 'btn-primary' : 'btn-light border'}`} onClick={() => pickShift(v)}>
+                      <i className={`bi ${icon} me-1`} />{label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="filter-group">
+                <h6>Khung giờ làm việc</h6>
+                <div className="d-flex align-items-center gap-1">
+                  <select className="form-select form-select-sm" aria-label="Từ giờ" value={applied.fromHour} onChange={(e) => apply({ ...applied, fromHour: e.target.value })}>
+                    <option value="">Từ giờ</option>
+                    {HOURS.slice(0, 24).map((h) => <option key={h} value={h}>{h}h</option>)}
+                  </select>
+                  <span>–</span>
+                  <select className="form-select form-select-sm" aria-label="Đến giờ" value={applied.toHour} onChange={(e) => apply({ ...applied, toHour: e.target.value })}>
+                    <option value="">Đến giờ</option>
+                    {HOURS.slice(1).map((h) => <option key={h} value={h}>{h}h</option>)}
+                  </select>
+                </div>
+                <div className="form-text">VD: từ 17h đến 22h chỉ hiện tin làm trọn trong khung giờ này.</div>
+              </div>
+              <div className="filter-group">
+                <h6>Thời gian đăng</h6>
+                {POSTED_WITHIN.map(([v, label]) => (
+                  <button key={label} className={`filter-item ${applied.postedWithin === v ? 'active' : ''}`} onClick={() => pickPosted(v)}>
+                    <span><span className="radio" />{label}</span>
+                  </button>
+                ))}
               </div>
               <div className="filter-group">
                 <h6>Mức lương</h6>
