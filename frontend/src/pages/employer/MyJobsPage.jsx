@@ -9,14 +9,42 @@ import StatCard from '../../components/StatCard';
 import EmptyState from '../../components/EmptyState';
 import { categoryStyle } from '../../utils/ui';
 
-/** Tin của tôi: danh sách tin đã đăng, số ứng viên chờ duyệt (FR-14). Sửa / đổi trạng thái / xóa làm ở buổi 8. */
+/** Nút chuyển trạng thái hợp lệ theo BR-09 (giống bảng ALLOWED ở JobService phía backend). */
+const NEXT = {
+  OPEN: [['FILLED', 'Đã nhận đủ người', 'primary'], ['CLOSED', 'Đóng tin', 'outline-dark']],
+  FILLED: [['COMPLETED', 'Xác nhận hoàn thành', 'success'], ['CLOSED', 'Đóng tin', 'outline-dark']],
+};
+
+/** Quản lý tin của tôi: sửa, đổi trạng thái, xóa (FR-07, FR-16). */
 export default function MyJobsPage() {
   const [jobs, setJobs] = useState(null);
   const [msg, setMsg] = useState(null);
 
-  useEffect(() => {
-    jobApi.myJobs().then(setJobs).catch((err) => setMsg({ ok: false, text: errorMessage(err) }));
-  }, []);
+  const load = () => jobApi.myJobs().then(setJobs).catch((err) => setMsg({ ok: false, text: errorMessage(err) }));
+  useEffect(() => { load(); }, []);
+
+  const run = async (action, okText) => {
+    try {
+      await action();
+      setMsg({ ok: true, text: okText });
+      load();
+    } catch (err) {
+      setMsg({ ok: false, text: errorMessage(err) });
+    }
+  };
+
+  const changeStatus = (job, status, label) => {
+    const warn = status === 'FILLED' || status === 'CLOSED' ? '\nCác đơn còn Chờ duyệt sẽ tự chuyển sang Bị từ chối.' : '';
+    if (window.confirm(`${label} cho tin “${job.title}”?${warn}`)) {
+      run(() => jobApi.changeStatus(job.id, status), 'Đã cập nhật trạng thái');
+    }
+  };
+
+  const remove = (job) => {
+    if (window.confirm(`Xóa tin “${job.title}”? Thao tác này không hoàn tác được.`)) {
+      run(() => jobApi.remove(job.id), 'Đã xóa tin');
+    }
+  };
 
   return (
     <>
@@ -58,6 +86,13 @@ export default function MyJobsPage() {
                 <Link className="btn btn-sm btn-outline-primary" to={`/employer/jobs/${j.id}/applicants`}>
                   <i className="bi bi-people" /> Ứng viên {j.pendingCount > 0 && <span className="badge text-bg-warning">{j.pendingCount} chờ</span>}
                 </Link>
+                {(j.status === 'OPEN' || j.status === 'FILLED') && (
+                  <Link className="btn btn-sm btn-outline-secondary" to={`/employer/jobs/${j.id}/edit`}><i className="bi bi-pencil" /> Sửa</Link>
+                )}
+                {(NEXT[j.status] || []).map(([status, label, color]) => (
+                  <button key={status} className={`btn btn-sm btn-${color}`} onClick={() => changeStatus(j, status, label)}>{label}</button>
+                ))}
+                {j.acceptedCount === 0 && <button className="btn btn-sm btn-outline-danger" onClick={() => remove(j)}><i className="bi bi-trash" /> Xóa</button>}
               </div>
             </div>
           </div>
