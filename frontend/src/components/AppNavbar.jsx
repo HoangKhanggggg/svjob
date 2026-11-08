@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import Avatar from './Avatar';
 
 const MENUS = {
@@ -38,6 +39,7 @@ export default function AppNavbar() {
           <div className="d-flex align-items-center gap-3 py-2 py-md-0">
             {user ? (
               <>
+                <NotificationBell />
                 <span className="nav-divider d-none d-md-block" />
                 <span className="user-menu">
                   <Avatar name={user.fullName} size={32} round />
