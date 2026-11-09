@@ -17,7 +17,6 @@ import vn.vlu.svjob.repository.*;
 import vn.vlu.svjob.security.UserPrincipal;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,6 +85,13 @@ class ServiceHappyPathTest {
                 .hasMessage("Chỉ chấp nhận file PDF");
         assertThatThrownBy(() -> fs.storeCv(new MockMultipartFile("file", "cv.pdf", "application/pdf", new byte[0])))
                 .hasMessage("Vui lòng chọn file CV");
+    }
+
+    @Test
+    void pdfCoKyTuTrongTruocDauPdf_vanNhan() throws Exception {
+        FileStorageService fs = storage();
+        String name = fs.storeCv(new MockMultipartFile("file", "cv-topcv.pdf", "application/pdf", "\n%PDF-1.7 test".getBytes()));
+        assertThat(name).endsWith(".pdf");
     }
 
     // ---------- ProfileService ----------
