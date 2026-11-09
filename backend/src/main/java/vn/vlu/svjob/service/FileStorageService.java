@@ -64,11 +64,20 @@ public class FileStorageService {
         return new PathResource(path);
     }
 
-    /** File PDF thật luôn bắt đầu bằng "%PDF" – chặn trường hợp đổi đuôi file .docx thành .pdf. */
+    /**
+     * File PDF thật có dấu "%PDF" ở đầu file – chặn trường hợp đổi đuôi file .docx thành .pdf.
+     * Một số trang tạo CV (vd TopCV) chèn vài ký tự trống trước "%PDF", chuẩn PDF cho phép
+     * dấu này nằm trong 1024 byte đầu nên ở đây tìm trong khoảng đó.
+     */
     private static boolean isPdf(MultipartFile file) {
         try (InputStream in = file.getInputStream()) {
-            byte[] head = in.readNBytes(4);
-            return head.length == 4 && head[0] == '%' && head[1] == 'P' && head[2] == 'D' && head[3] == 'F';
+            byte[] head = in.readNBytes(1024);
+            for (int i = 0; i + 3 < head.length; i++) {
+                if (head[i] == '%' && head[i + 1] == 'P' && head[i + 2] == 'D' && head[i + 3] == 'F') {
+                    return true;
+                }
+            }
+            return false;
         } catch (IOException e) {
             return false;
         }
